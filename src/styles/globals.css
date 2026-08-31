@@ -1,0 +1,139 @@
+/* ============================
+   GLOBAL RESET
+   ============================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-relaxed);
+
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================
+   TYPOGRAPHY
+   ============================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ============================
+   FORM ELEMENTS
+   ============================ */
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* ============================
+   MEDIA
+   ============================ */
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+/* ============================
+   LISTS
+   ============================ */
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ============================
+   ACCESSIBILITY
+   ============================ */
+
+:focus-visible {
+  outline: var(--border-width-emphasis) solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ============================
+   SELECTION
+   ============================ */
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+/* 
+nav a:hover {
+  color: red;
+} */
+.nav-link {
+  color: var(--color-text-secondary);
+  transition: color 150ms ease;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+}
+
+.nav-link-active {
+  color: var(--color-primary);
+}

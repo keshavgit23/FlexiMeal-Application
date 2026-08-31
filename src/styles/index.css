@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./globals.css";
+
+@theme {
+  --color-brand-tomato: var(--color-primary);
+  --color-brand-saffron: var(--color-secondary);
+
+  --color-brand-tomato-hover: var(--color-primary-hover);
+  --color-brand-tomato-active: var(--color-primary-active);
+
+  --color-owner-primary: var(--color-role-owner-primary);
+  --color-owner-primary-hover: var(--color-role-owner-primary-hover);
+
+  --font-heading: var(--font-family-heading);
+  --font-body: var(--font-family-body);
+}

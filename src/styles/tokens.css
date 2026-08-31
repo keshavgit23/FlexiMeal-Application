@@ -1,0 +1,210 @@
+:root {
+  /* ============================
+     PRIMITIVE TOKENS
+     ============================ */
+
+  /* Brand */
+  --primitive-red-500: #EF4444;
+  --primitive-red-600: #DC2626;
+  --primitive-red-700: #B91C1C;
+  --primitive-orange-500: #F97316;
+  --primitive-orange-600: #FF6B00;
+  --primitive-cream-50: #FFFDF9;
+  --primitive-cream-100: #FFF8EE;
+  --primitive-white: #FFFFFF;
+
+  /* Neutral */
+  --primitive-gray-50: #F9FAFB;
+  --primitive-gray-100: #F3F4F6;
+  --primitive-gray-200: #E5E7EB;
+  --primitive-gray-300: #D1D5DB;
+  --primitive-gray-400: #9CA3AF;
+  --primitive-gray-500: #6B7280;
+  --primitive-gray-600: #4B5563;
+  --primitive-gray-700: #374151;
+  --primitive-gray-800: #1F2937;
+  --primitive-gray-900: #111827;
+
+  /* Success / Emerald */
+  --primitive-emerald-50: #ECFDF5;
+  --primitive-emerald-100: #D1FAE5;
+  --primitive-emerald-400: #34D399;
+  --primitive-emerald-500: #10B981;
+  --primitive-emerald-600: #16A34A;
+  --primitive-emerald-700: #047857;
+  --primitive-emerald-800: #065F46;
+
+  /* Warning / Amber */
+  --primitive-amber-100: #FEF3C7;
+  --primitive-amber-300: #FCD34D;
+  --primitive-amber-400: #FBBF24;
+  --primitive-amber-500: #F59E0B;
+
+  /* Error / Red (distinct scale) */
+  --primitive-red-50: #FEF2F2;
+  --primitive-red-100: #FEE2E2;
+  --primitive-red-800: #991B1B;
+
+  /* Info / Blue */
+  --primitive-blue-50: #EFF6FF;
+  --primitive-blue-100: #DBEAFE;
+  --primitive-blue-600: #2563EB;
+
+  /* Tertiary / Purple */
+  --primitive-purple-100: #F3E8FF;
+  --primitive-purple-600: #9333EA;
+
+  /* Accent / Orange (secondary from saffron) */
+  --primitive-orange-50: #FFF7ED;
+  --primitive-orange-100: #FFEDD5;
+
+  /* ============================
+     SEMANTIC TOKENS
+     ============================ */
+
+  --color-background: var(--primitive-cream-50);
+  --color-background-alt: var(--primitive-cream-100);
+  --color-surface: var(--primitive-white);
+
+  --color-text-primary: var(--primitive-gray-900);
+  --color-text-secondary: var(--primitive-gray-500);
+  --color-text-disabled: var(--primitive-gray-300);
+  --color-text-inverse: var(--primitive-white);
+
+  --color-border: var(--primitive-gray-200);
+  --color-border-subtle: var(--primitive-gray-100);
+  --color-border-focus: var(--primitive-red-600);
+  --color-border-focus-owner: var(--primitive-emerald-600);
+
+  --color-primary: var(--primitive-red-600);
+  --color-primary-hover: var(--primitive-red-500);
+  --color-primary-active: var(--primitive-red-700);
+  --color-secondary: var(--primitive-orange-600);
+
+  --color-role-owner-primary: var(--primitive-emerald-700);
+  --color-role-owner-primary-hover: var(--primitive-emerald-800);
+
+  --color-success: var(--primitive-emerald-600);
+  --color-success-bg: var(--primitive-emerald-50);
+  --color-success-border: var(--primitive-emerald-100);
+
+  --color-warning: var(--primitive-amber-500);
+  --color-warning-bg: var(--primitive-amber-100);
+
+  --color-error: var(--primitive-red-800);
+  --color-error-bg: var(--primitive-red-50);
+  --color-error-border: var(--primitive-red-100);
+
+  --color-info: var(--primitive-blue-600);
+  --color-info-bg: var(--primitive-blue-50);
+  --color-info-border: var(--primitive-blue-100);
+
+  /* ============================
+     TYPOGRAPHY
+     ============================ */
+
+  --font-family-heading: 'Outfit', sans-serif;
+  --font-family-body: 'Plus Jakarta Sans', sans-serif;
+
+  --font-size-display-1: 4.5rem;   /* 72px */
+  --font-size-display-2: 3.75rem;  /* 60px */
+  --font-size-heading-1: 3rem;     /* 48px */
+  --font-size-heading-2: 2.25rem;  /* 36px */
+  --font-size-heading-3: 1.875rem; /* 30px */
+  --font-size-heading-4: 1.5rem;   /* 24px */
+  --font-size-heading-5: 1.25rem;  /* 20px */
+  --font-size-body-lg: 1.125rem;   /* 18px */
+  --font-size-body-base: 1rem;     /* 16px */
+  --font-size-body-sm: 0.875rem;   /* 14px */
+  --font-size-label: 0.75rem;      /* 12px */
+  --font-size-caption: 0.6875rem;  /* 11px */
+  --font-size-overline: 0.625rem;  /* 10px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.1;
+  --line-height-relaxed: 1.6;
+
+  /* ============================
+     SPACING
+     ============================ */
+
+  --space-0-5: 0.125rem; /* 2px */
+  --space-1: 0.25rem;    /* 4px */
+  --space-1-5: 0.375rem; /* 6px */
+  --space-2: 0.5rem;     /* 8px */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-3-5: 0.875rem; /* 14px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+  --space-8: 2rem;       /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  /* ============================
+     RADIUS
+     ============================ */
+
+  --radius-md: 0.375rem;  /* 6px */
+  --radius-lg: 0.5rem;    /* 8px */
+  --radius-xl: 0.75rem;   /* 12px */
+  --radius-2xl: 1rem;     /* 16px */
+  --radius-3xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+
+  /* ============================
+     BORDERS
+     ============================ */
+
+  --border-width-default: 1px;
+  --border-width-emphasis: 2px;
+
+  /* ============================
+     SHADOWS
+     ============================ */
+
+  --shadow-resting: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 20px 35px -10px rgba(220, 38, 38, 0.15);
+  --shadow-ambient: 0 10px 30px -5px rgba(220, 38, 38, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ============================
+     LAYOUT
+     ============================ */
+
+  --layout-container-max-width: 1280px;
+  --layout-header-height: 5rem;       /* 80px */
+
+  --layout-page-padding-x-mobile: 1rem;    /* 16px */
+  --layout-page-padding-x-tablet: 1.5rem;  /* 24px */
+  --layout-page-padding-x-desktop: 2rem;   /* 32px */
+
+  --layout-section-padding-y-sm: 2.5rem; /* 40px */
+  --layout-section-padding-y-md: 3rem;   /* 48px */
+  --layout-section-padding-y-lg: 5rem;   /* 80px */
+  --layout-section-padding-y-xl: 6rem;   /* 96px */
+  --layout-hero-padding-y-lg: 9rem;      /* 144px, named one-off — see §5 */
+
+  --layout-grid-gap-tight: 1rem;   /* 16px */
+  --layout-grid-gap-default: 1.5rem; /* 24px */
+  --layout-grid-gap-loose: 2rem;   /* 32px */
+  --layout-grid-gap-hero: 3rem;    /* 48px */
+
+  /* ============================
+     BREAKPOINTS (reference only — enforced in JS/media queries, not usable as CSS custom properties)
+     sm: 640px | md: 768px | lg: 1024px | xl: 1280px (recommended) | 2xl: 1536px (recommended)
+     ============================ */
+}
