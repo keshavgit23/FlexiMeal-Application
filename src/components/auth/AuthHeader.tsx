@@ -1,16 +1,5 @@
 import BrandLogo from "../../assets/BrandLogo.jpeg";
-function SparklesBadgeIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className={className}
-            aria-hidden="true"
-        >
-            <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z" />
-        </svg>
-    );
-}
+
 export interface AuthHeaderProps {
     title?: string;
     subtitle?: string;

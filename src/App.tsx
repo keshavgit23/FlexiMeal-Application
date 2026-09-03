@@ -1,5 +1,5 @@
 // App.tsx
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useClerk } from "@clerk/react";
 import { useEffect } from "react";
 import AuthPage from "./pages/auth/AuthPage";
@@ -8,7 +8,6 @@ import SignInSuccess from './pages/auth/SignInSuccess';
 import SignUpSuccess from './pages/auth/SignUpSuccess';
 
 function App() {
-  const navigate = useNavigate();
   const { loaded, client } = useClerk();
 
   // Tells Clerk to use single-page routing instead of triggering native page reloads
