@@ -3,7 +3,7 @@ import AuthPage from "./pages/auth/AuthPage";
 import SSOCallbackPage from "./routes/clerk-routes/SSO-Callback";
 import AuthResolver from "./pages/auth/AuthResolver";
 import DashboardPage from "./pages/DashboardPage";
-import OnboardingPage from "./pages/OnboardingPage";
+import {OnboardingPage} from "./pages/onboarding/OnboardingPage";
 
 function App() {
   return (
