@@ -13,6 +13,7 @@ interface StudentOnboardingProps {
   onPrevStep: () => void;
   onBackToRole: () => void;
   onComplete: () => void;
+  isLoading: boolean;
 }
 
 export const StudentOnboarding: React.FC<StudentOnboardingProps> = ({
@@ -24,6 +25,7 @@ export const StudentOnboarding: React.FC<StudentOnboardingProps> = ({
   onPrevStep,
   onBackToRole,
   onComplete,
+  isLoading,
 }) => {
   if (step === 1) {
     return (
@@ -49,6 +51,7 @@ export const StudentOnboarding: React.FC<StudentOnboardingProps> = ({
         onToggleRequirement={onToggleRequirement}
         onNext={onComplete}
         onBack={onPrevStep}
+        isLoading={isLoading}
       />
     );
   }

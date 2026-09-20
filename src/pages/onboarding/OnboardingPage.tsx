@@ -1,30 +1,33 @@
 import React, { useState } from 'react';
+import { useAuth } from '@clerk/react';
+import { useNavigate } from 'react-router-dom';
+
 import { OnboardingLayout } from './sections/OnboardingLayout';
 import { OnboardingWelcome } from './sections/OnboardingWelcome';
 import { ProfileForm } from './sections/ProfileForm';
 import { RoleSelector } from './sections/RoleSelector';
-import { OnboardingComplete } from './sections/OnboardingComplete';
 import { WelcomeAboard } from './sections/WelcomeAboard';
-
 import { StudentOnboarding } from '../../components/onboarding/StudentOnboarding';
 import { MessOwnerOnboarding } from '../../components/onboarding/MessOwnerOnboarding';
+import { saveOnboardingDetails } from '../../apis/saveOnboardingDetails.api';
+
 
 import type { OnboardingData, UserRole } from '../../types/onboarding';
 
-type OnboardingPhase = 
-  | 'welcome' 
-  | 'profile' 
-  | 'role' 
-  | 'student_flow' 
-  | 'mess_owner_flow' 
-  | 'complete' 
+type OnboardingPhase =
+  | 'welcome'
+  | 'profile'
+  | 'role'
+  | 'student_flow'
+  | 'mess_owner_flow'
+  | 'complete'
   | 'aboard';
 
 export const OnboardingPage: React.FC = () => {
   // Master routing state
   const [phase, setPhase] = useState<OnboardingPhase>('welcome');
   const [subStep, setSubStep] = useState<number>(1);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<OnboardingData>({
     fullName: '',
     phone: '',
@@ -37,10 +40,11 @@ export const OnboardingPage: React.FC = () => {
     specialRequirements: [],
     messName: '',
     messAddress: '',
-    messLocation: '',
+    messCity: '',
     messState: '',
   });
-
+  const { getToken } = useAuth();
+  const navigate = useNavigate();
   const updateFormField = (field: keyof OnboardingData, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -82,6 +86,28 @@ export const OnboardingPage: React.FC = () => {
     setSubStep(1);
   };
 
+  const handleOnboardingComplete = async () => {
+    setIsLoading(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Token unavailable');
+      }
+      const response = await saveOnboardingDetails(formData, token);
+
+      if (response.success) {
+        if (response.user.role === 'student') {
+          navigate('/student');
+        } else if (response.user.role === 'mess_owner') {
+          navigate('/mess-owner');
+        }
+      }
+    } catch (error) {
+      console.error('Onboarding submission failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   // -------------------------------------------------------------
   // Dynamic Progress Calculation
   // -------------------------------------------------------------
@@ -157,7 +183,8 @@ export const OnboardingPage: React.FC = () => {
             onNextStep={() => setSubStep((s) => s + 1)}
             onPrevStep={() => setSubStep((s) => s - 1)}
             onBackToRole={() => setPhase('role')}
-            onComplete={() => setPhase('complete')}
+            onComplete={handleOnboardingComplete}
+            isLoading={isLoading}
           />
         )}
 
@@ -168,16 +195,8 @@ export const OnboardingPage: React.FC = () => {
             formData={formData}
             updateFormField={updateFormField}
             onBackToRole={() => setPhase('role')}
-            onComplete={() => setPhase('complete')}
-          />
-        )}
-
-        {/* COMPLETION */}
-        {phase === 'complete' && (
-          <OnboardingComplete
-            data={formData}
-            onContinue={() => setPhase('aboard')}
-            onReset={resetFlow}
+            onComplete={handleOnboardingComplete}
+            isLoading={isLoading}
           />
         )}
 

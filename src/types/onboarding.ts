@@ -19,6 +19,6 @@ export interface OnboardingData {
   messName?: string;
   messPhone?: string;
   messAddress?: string;
-  messLocation?: string;
+  messCity?: string;
   messState?: string;
 }

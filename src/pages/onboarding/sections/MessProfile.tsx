@@ -15,22 +15,24 @@ interface MessProfileProps {
   messName: string;
   messPhone: string;
   messAddress: string;
-  messLocation: string;
+  messCity: string;
   messState: string;
   onChange: (field: keyof OnboardingData, value: unknown) => void;
   onNext: () => void;
   onBack: () => void;
+  isLoading: boolean;
 }
 
 export const MessProfile: React.FC<MessProfileProps> = ({
   messName,
   messPhone,
   messAddress,
-  messLocation,
+  messCity,
   messState,
   onChange,
   onNext,
   onBack,
+  isLoading,
 }) => {
 
   const states = [
@@ -65,11 +67,11 @@ export const MessProfile: React.FC<MessProfileProps> = ({
       clearError('messPhone');
     }
   };
-  const handleMessLocationChange = (value: string) => {
-    onChange('messLocation', value);
+  const handleMessCityChange = (value: string) => {
+    onChange('messCity', value);
 
-    if (errors.messLocation) {
-      clearError('messLocation');
+    if (errors.messCity) {
+      clearError('messCity');
     }
   };
 
@@ -105,8 +107,8 @@ export const MessProfile: React.FC<MessProfileProps> = ({
     );
 
     const isLocationValid = validateField(
-      'messLocation',
-      required(messLocation, 'Location')
+      'messCity',
+      required(messCity, 'City')
     );
 
     const isStateValid = validateField(
@@ -172,6 +174,7 @@ export const MessProfile: React.FC<MessProfileProps> = ({
             onChange={(value) => handlePhoneChange(value)}
             label="Phone Number"
             placeholder="9876543210"
+            helperText=""
           />
         </div>
         {errors.messPhone && (
@@ -217,15 +220,15 @@ export const MessProfile: React.FC<MessProfileProps> = ({
               </div>
               <input
                 type="text"
-                value={messLocation}
-                onChange={(e) => handleMessLocationChange(e.target.value)}
+                value={messCity}
+                onChange={(e) => handleMessCityChange(e.target.value)}
                 placeholder="Enter your city"
                 className="w-full pl-11 pr-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-border-focus-owner)] focus:border-[var(--color-border-focus-owner)] transition-shadow outline-none text-[var(--color-text-primary)] placeholder-[var(--color-text-disabled)] shadow-sm"
               />
             </div>
-            {errors.messLocation && (
+            {errors.messCity && (
               <p className="text-[11px] text-red-500 mt-1 pl-1">
-                {errors.messLocation}
+                {errors.messCity}
               </p>
             )}
           </div>
@@ -255,8 +258,14 @@ export const MessProfile: React.FC<MessProfileProps> = ({
       {/* Shared Navigation Component */}
       <div className="mt-8">
         <OnboardingNavigation
-          onBack={onBack}
           onNext={handleNext}
+          onBack={onBack}
+          nextLabel={isLoading ? 'Saving...' : 'Finish'}
+          nextIcon={
+            isLoading
+              ? 'fa-solid fa-spinner fa-spin'
+              : 'fa-solid fa-arrow-right'
+          }
         />
       </div>
     </div>

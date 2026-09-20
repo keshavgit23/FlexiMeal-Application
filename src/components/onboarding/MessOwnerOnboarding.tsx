@@ -9,6 +9,7 @@ interface MessOwnerOnboardingProps {
   updateFormField: (field: keyof OnboardingData, value: unknown) => void;
   onBackToRole: () => void;
   onComplete: () => void;
+  isLoading: boolean;
 }
 
 export const MessOwnerOnboarding: React.FC<MessOwnerOnboardingProps> = ({
@@ -24,11 +25,12 @@ export const MessOwnerOnboarding: React.FC<MessOwnerOnboardingProps> = ({
         messName={formData.messName || ''}
         messPhone={formData.messPhone || ''}
         messAddress={formData.messAddress || ''}
-        messLocation={formData.messLocation || ''}
+        messCity={formData.messCity || ''}
         messState={formData.messState || ''}
         onChange={updateFormField}
         onNext={onComplete}
         onBack={onBackToRole}
+        isLoading={false}
       />
     );
   }
