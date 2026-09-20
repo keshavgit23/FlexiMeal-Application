@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { OnboardingNavigation } from '../../../components/onboarding/OnboardingNavigation';
+import { useFormValidation } from '../../../hooks/useFormValidation';
+import {
+  phone as validatePhone,
+  fullName as validateFullName,
+} from '../../../utils/validation';
 
 /**
  * ============================================================================
@@ -29,6 +34,11 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
   onBack,
 }) => {
   const [avatarIndex, setAvatarIndex] = useState(0);
+  const {
+    errors,
+    validateField,
+    clearError,
+  } = useFormValidation();
 
   // Friendly avatar color/style cycle for local UI demo
   const avatarPalettes = [
@@ -38,6 +48,45 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
     { bg: 'bg-[#F3E8FF]', text: 'text-[#9333EA]', border: 'border-[#D8B4FE]' },
   ];
 
+  const handleFullNameChange = (value: string) => {
+    // Only allow letters and spaces
+    const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+
+    onChange('fullName', sanitizedValue);
+
+    if (errors.fullName) {
+      clearError('fullName');
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Only digits, max 10
+    const sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+
+    onChange('phone', sanitizedValue);
+
+    if (errors.phone) {
+      clearError('phone');
+    }
+  };
+
+  const handleNext = () => {
+    const isNameValid = validateField(
+      'fullName',
+      validateFullName(fullName)
+    );
+
+    const isPhoneValid = validateField(
+      'phone',
+      validatePhone(phone)
+    );
+
+    if (!isNameValid || !isPhoneValid) {
+      return;
+    }
+
+    onNext();
+  };
   const handleAvatarClick = () => {
     setAvatarIndex((prev) => (prev + 1) % avatarPalettes.length);
   };
@@ -108,7 +157,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         {/* Form Fields */}
         <div className="space-y-4 mt-4">
           {/* Full Name Field */}
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="profile-full-name"
               className="block text-xs font-semibold text-[#374151] mb-1.5"
@@ -127,16 +176,21 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 id="profile-full-name"
                 type="text"
                 value={fullName}
-                onChange={(e) => onChange('fullName', e.target.value)}
+                onChange={(e) => handleFullNameChange(e.target.value)}
                 placeholder="Enter your full name"
-                className="w-full pl-10 pr-4 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
+                className="w-full pl-10 pr-4 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none transition-colors"
                 style={{ fontFamily: 'var(--font-family-body)' }}
               />
             </div>
+              {errors.fullName && (
+                <p className="text-[11px] text-red-500 mt-1 pl-1">
+                  {errors.fullName}
+                </p>
+              )}
           </div>
 
           {/* Phone Number Field */}
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="profile-phone-number"
               className="block text-xs font-semibold text-[#374151] mb-1.5"
@@ -161,12 +215,17 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                 id="profile-phone-number"
                 type="tel"
                 value={phone}
-                onChange={(e) => onChange('phone', e.target.value)}
-                placeholder="98765 43210"
-                className="w-full pl-22 pr-4 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="9876543210"
+                className="w-full pl-22 pr-4 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none transition-colors"
                 style={{ fontFamily: 'var(--font-family-body)' }}
               />
             </div>
+            {errors.phone && (
+              <p className="text-[11px] text-red-500 mt-1 pl-1">
+                {errors.phone}
+              </p>
+            )}
             <p className="text-[11px] text-[#9CA3AF] mt-1 pl-1">
               Used for meal booking alerts &amp; mess communication
             </p>
@@ -176,7 +235,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
 
       {/* Navigation Footer */}
       <OnboardingNavigation
-        onNext={onNext}
+        onNext={handleNext}
         onBack={onBack}
         nextLabel="Next"
         nextIcon="fa-solid fa-arrow-right"

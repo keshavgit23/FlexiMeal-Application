@@ -73,7 +73,7 @@
 
   --color-border: var(--primitive-gray-200);
   --color-border-subtle: var(--primitive-gray-100);
-  --color-border-focus: var(--primitive-red-600);
+  --color-border-focus: var(--primitive-red-100);
   --color-border-focus-owner: var(--primitive-emerald-600);
 
   --color-primary: var(--primitive-red-600);

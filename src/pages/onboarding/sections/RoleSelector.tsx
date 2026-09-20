@@ -1,7 +1,11 @@
 import React from 'react';
 import type { UserRole } from '../../../types/onboarding';
 import { OnboardingNavigation } from '../../../components/onboarding/OnboardingNavigation';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faGraduationCap,
+  faUtensils,
+} from '@fortawesome/free-solid-svg-icons';
 /**
  * ============================================================================
  * SCREEN 3 — ROLE SELECTOR
@@ -32,14 +36,14 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
       id: 'student' as UserRole,
       title: 'Student',
       description: 'Find messes, view menus, book meals and more.',
-      icon: 'fa-solid fa-graduation-cap',
+      icon: faGraduationCap,
       badge: 'Popular for Campus',
     },
     {
       id: 'owner' as UserRole,
       title: 'Mess Owner',
       description: 'Manage your mess, update menus and reach students.',
-      icon: 'fa-solid fa-store',
+      icon: faUtensils,
       badge: 'Mess Partners',
     },
   ];
@@ -92,7 +96,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
                   }`}
                   aria-hidden="true"
                 >
-                  <i className={role.icon}></i>
+                  <FontAwesomeIcon icon={role.icon} />
                 </div>
 
                 {/* Role Details */}

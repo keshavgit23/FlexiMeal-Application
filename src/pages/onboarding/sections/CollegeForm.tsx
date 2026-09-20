@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { OnboardingNavigation } from '../../../components/onboarding/OnboardingNavigation';
+import { CustomDropdown } from '../../../components/ui-elements/CustomDropdown';
+import { useFormValidation } from '../../../hooks/useFormValidation';
+import {
+  required,
+} from '../../../utils/validation';
 
 /**
  * ============================================================================
@@ -58,6 +63,27 @@ export const CollegeForm: React.FC<CollegeFormProps> = ({
     setShowCollegeSuggestions(false);
   };
 
+  const {
+    errors,
+    validateField,
+    clearError,
+  } = useFormValidation();
+  const handleNext = () => {
+    const isCollegeValid = validateField(
+      'college',
+      required(college, 'College name')
+    );
+
+    const isCityValid = validateField(
+      'city',
+      required(city, 'City')
+    );
+    if (!isCollegeValid || !isCityValid) {
+      return;
+    }
+    onNext();
+  };
+
   return (
     <div className="flex-1 flex flex-col justify-between" id="onboarding-step-college">
       <div className="w-full">
@@ -103,9 +129,14 @@ export const CollegeForm: React.FC<CollegeFormProps> = ({
                 type="text"
                 value={college}
                 onFocus={() => setShowCollegeSuggestions(true)}
-                onChange={(e) => onChange('college', e.target.value)}
+                onChange={(e) => {
+                  onChange('college', e.target.value);
+                  if (errors.college) {
+                    clearError('college');
+                  }
+                }}
                 placeholder="Enter your college name"
-                className="w-full pl-10 pr-9 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
+                className="w-full pl-10 pr-9 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none transition-colors"
                 style={{ fontFamily: 'var(--font-family-body)' }}
               />
 
@@ -116,14 +147,17 @@ export const CollegeForm: React.FC<CollegeFormProps> = ({
                 aria-label="Toggle college suggestions"
               >
                 <i
-                  className={`fa-solid fa-chevron-down transition-transform ${
-                    showCollegeSuggestions ? 'rotate-180' : ''
-                  }`}
+                  className={`fa-solid fa-chevron-down transition-transform ${showCollegeSuggestions ? 'rotate-180' : ''
+                    }`}
                   aria-hidden="true"
                 ></i>
               </button>
             </div>
-
+            {errors.college && (
+              <p className="text-[11px] text-red-500 mt-1 pl-1">
+                {errors.college}
+              </p>
+            )}
             {/* Quick Suggestions Dropdown */}
             {showCollegeSuggestions && (
               <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto py-1">
@@ -147,44 +181,28 @@ export const CollegeForm: React.FC<CollegeFormProps> = ({
 
           {/* City Selection */}
           <div>
-            <label
-              htmlFor="college-city-select"
-              className="block text-xs font-semibold text-[#374151] mb-1.5"
-              style={{ fontFamily: 'var(--font-family-body)' }}
-            >
-              City
-            </label>
-
-            <div className="relative flex items-center">
-              <span
-                className="absolute left-3.5 text-[#9CA3AF] pointer-events-none text-sm"
-                aria-hidden="true"
-              >
-                <i className="fa-solid fa-location-dot"></i>
-              </span>
-
-              <select
-                id="college-city-select"
-                value={city}
-                onChange={(e) => onChange('city', e.target.value)}
-                className="w-full pl-10 pr-9 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl appearance-none focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
-                style={{ fontFamily: 'var(--font-family-body)' }}
-              >
-                <option value="">Select your city</option>
-                {popularCities.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-
-              <span
-                className="absolute right-3.5 text-[#9CA3AF] pointer-events-none text-xs"
-                aria-hidden="true"
-              >
-                <i className="fa-solid fa-chevron-down"></i>
-              </span>
-            </div>
+            <CustomDropdown
+              id="college-city-select"
+              label="City"
+              value={city}
+              placeholder="Select your city"
+              options={popularCities.map((city) => ({
+                label: city,
+                value: city,
+              }))}
+              onChange={(value) => {
+                onChange('city', value);
+                if (errors.city) {
+                  clearError('city');
+                }
+              }}
+              icon="fa-solid fa-location-dot"
+            />
+            {errors.city && (
+              <p className="text-[11px] text-red-500 mt-1 pl-1">
+                {errors.city}
+              </p>
+            )}
           </div>
 
           {/* Year / Course (Optional) */}
@@ -213,7 +231,7 @@ export const CollegeForm: React.FC<CollegeFormProps> = ({
                 value={course}
                 onChange={(e) => onChange('course', e.target.value)}
                 placeholder="e.g. BCA - TY, B.Tech - 3rd Yr"
-                className="w-full pl-10 pr-4 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
+                className="w-full pl-10 pr-4 py-3 min-h-[48px] text-sm text-[#111827] bg-white border border-[#D1D5DB] rounded-xl placeholder-[#9CA3AF] focus:outline-none  transition-colors"
                 style={{ fontFamily: 'var(--font-family-body)' }}
               />
             </div>
@@ -223,7 +241,7 @@ export const CollegeForm: React.FC<CollegeFormProps> = ({
 
       {/* Navigation Footer */}
       <OnboardingNavigation
-        onNext={onNext}
+        onNext={handleNext}
         onBack={onBack}
         nextLabel="Next"
         nextIcon="fa-solid fa-arrow-right"
