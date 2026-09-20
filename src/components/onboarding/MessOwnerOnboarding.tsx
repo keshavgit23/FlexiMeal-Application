@@ -22,6 +22,7 @@ export const MessOwnerOnboarding: React.FC<MessOwnerOnboardingProps> = ({
     return (
       <MessProfile
         messName={formData.messName || ''}
+        messPhone={formData.messPhone || ''}
         messAddress={formData.messAddress || ''}
         messLocation={formData.messLocation || ''}
         messState={formData.messState || ''}

@@ -1,12 +1,19 @@
 // src/pages/onboarding/sections/MessProfile.tsx
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStore, faLocationDot, faCity, faMap } from '@fortawesome/free-solid-svg-icons';
+import { faStore, faLocationDot, faCity } from '@fortawesome/free-solid-svg-icons';
 import { OnboardingNavigation } from '../../../components/onboarding/OnboardingNavigation';
 import type { OnboardingData } from '../../../types/onboarding';
-
+import { CustomDropdown } from '../../../components/ui-elements/CustomDropdown';
+import { PhoneField } from '../../../components/ui-elements/PhoneFiekd';
+import { useFormValidation } from '../../../hooks/useFormValidation';
+import { required } from '../../../utils/validation';
+import {
+  phone as validatePhone,
+} from '../../../utils/validation';
 interface MessProfileProps {
   messName: string;
+  messPhone: string;
   messAddress: string;
   messLocation: string;
   messState: string;
@@ -17,6 +24,7 @@ interface MessProfileProps {
 
 export const MessProfile: React.FC<MessProfileProps> = ({
   messName,
+  messPhone,
   messAddress,
   messLocation,
   messState,
@@ -24,12 +32,100 @@ export const MessProfile: React.FC<MessProfileProps> = ({
   onNext,
   onBack,
 }) => {
-  // Follows CollegeForm's validation pattern: prevent Next if fields are empty
-  const isFormValid =
-    messName.trim() !== '' &&
-    messAddress.trim() !== '' &&
-    messLocation.trim() !== '' &&
-    messState.trim() !== '';
+
+  const states = [
+    'Maharashtra',
+    'Karnataka',
+    'Delhi',
+    'Gujarat',
+  ];
+
+  const {
+    errors,
+    validateField,
+    clearError,
+  } = useFormValidation();
+  const handleMessNameChange = (value: string) => {
+    // Only allow letters and spaces
+    const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+
+    onChange('messName', sanitizedValue);
+
+    if (errors.messName) {
+      clearError('messName');
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Only digits, max 10
+    const sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+    onChange('messPhone', sanitizedValue);
+
+    if (errors.messPhone) {
+      clearError('messPhone');
+    }
+  };
+  const handleMessLocationChange = (value: string) => {
+    onChange('messLocation', value);
+
+    if (errors.messLocation) {
+      clearError('messLocation');
+    }
+  };
+
+  const handleMessStateChange = (value: string) => {
+    onChange('messState', value);
+
+    if (errors.messState) {
+      clearError('messState');
+    }
+  };
+  const handleMessAddressChange = (value: string) => {
+    onChange('messAddress', value);
+
+    if (errors.messAddress) {
+      clearError('messAddress');
+    }
+  };
+
+  const handleNext = () => {
+    const isMessNameValid = validateField(
+      'messName',
+      required(messName, 'Mess name')
+    );
+
+    const isPhoneValid = validateField(
+      'messPhone',
+      validatePhone(messPhone)
+    );
+
+    const isAddressValid = validateField(
+      'messAddress',
+      required(messAddress, 'Address')
+    );
+
+    const isLocationValid = validateField(
+      'messLocation',
+      required(messLocation, 'Location')
+    );
+
+    const isStateValid = validateField(
+      'messState',
+      required(messState, 'State')
+    );
+
+    if (
+      !isMessNameValid ||
+      !isPhoneValid ||
+      !isAddressValid ||
+      !isLocationValid ||
+      !isStateValid
+    ) {
+      return;
+    }
+
+    onNext();
+  };
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col animate-fade-in">
@@ -57,12 +153,32 @@ export const MessProfile: React.FC<MessProfileProps> = ({
             <input
               type="text"
               value={messName}
-              onChange={(e) => onChange('messName', e.target.value)}
+              onChange={(e) => handleMessNameChange(e.target.value)}
               placeholder="Enter your mess name"
               className="w-full pl-11 pr-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-border-focus-owner)] focus:border-[var(--color-border-focus-owner)] transition-shadow outline-none text-[var(--color-text-primary)] placeholder-[var(--color-text-disabled)] shadow-sm"
             />
           </div>
+          {errors.messName && (
+            <p className="text-[11px] text-red-500 mt-1 pl-1">
+              {errors.messName}
+            </p>
+          )}
         </div>
+
+        <div className="space-y-1.5">
+          <PhoneField
+            id="mess-phone"
+            value={messPhone}
+            onChange={(value) => handlePhoneChange(value)}
+            label="Phone Number"
+            placeholder="9876543210"
+          />
+        </div>
+        {errors.messPhone && (
+          <p className="text-[11px] text-red-500 mt-1 pl-1">
+            {errors.messPhone}
+          </p>
+        )}
 
         {/* Address */}
         <div className="space-y-1.5">
@@ -75,18 +191,23 @@ export const MessProfile: React.FC<MessProfileProps> = ({
             </div>
             <textarea
               value={messAddress}
-              onChange={(e) => onChange('messAddress', e.target.value)}
+              onChange={(e) => handleMessAddressChange(e.target.value)}
               placeholder="Enter complete address"
               rows={3}
               className="w-full pl-11 pr-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-border-focus-owner)] focus:border-[var(--color-border-focus-owner)] transition-shadow outline-none text-[var(--color-text-primary)] placeholder-[var(--color-text-disabled)] resize-none shadow-sm"
             />
           </div>
+          {errors.messAddress && (
+            <p className="text-[11px] text-red-500 mt-1 pl-1">
+              {errors.messAddress}
+            </p>
+          )}
         </div>
 
         {/* Responsive Grid for Location and State */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative w-full">
           {/* Location / City */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="text-sm font-medium text-[var(--color-text-primary)]">
               Location / City
             </label>
@@ -97,48 +218,45 @@ export const MessProfile: React.FC<MessProfileProps> = ({
               <input
                 type="text"
                 value={messLocation}
-                onChange={(e) => onChange('messLocation', e.target.value)}
+                onChange={(e) => handleMessLocationChange(e.target.value)}
                 placeholder="Enter your city"
                 className="w-full pl-11 pr-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-border-focus-owner)] focus:border-[var(--color-border-focus-owner)] transition-shadow outline-none text-[var(--color-text-primary)] placeholder-[var(--color-text-disabled)] shadow-sm"
               />
             </div>
+            {errors.messLocation && (
+              <p className="text-[11px] text-red-500 mt-1 pl-1">
+                {errors.messLocation}
+              </p>
+            )}
           </div>
 
-          {/* State */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[var(--color-text-primary)]">
-              State
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--color-text-disabled)]">
-                <FontAwesomeIcon icon={faMap} />
-              </div>
-              <select
-                value={messState}
-                onChange={(e) => onChange('messState', e.target.value)}
-                className="w-full pl-11 pr-10 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-border-focus-owner)] focus:border-[var(--color-border-focus-owner)] transition-shadow outline-none text-[var(--color-text-primary)] invalid:text-[var(--color-text-disabled)] shadow-sm"
-                required
-              >
-                <option value="" disabled className="text-[var(--color-text-disabled)]">
-                  Select your state
-                </option>
-                <option value="Maharashtra" className="text-[var(--color-text-primary)]">Maharashtra</option>
-                <option value="Karnataka" className="text-[var(--color-text-primary)]">Karnataka</option>
-                <option value="Delhi" className="text-[var(--color-text-primary)]">Delhi</option>
-                <option value="Gujarat" className="text-[var(--color-text-primary)]">Gujarat</option>
-                {/* Additional states can be populated here */}
-              </select>
-            </div>
+          <div className="relative w-full min-w-0">
+            {/* State */}
+            <CustomDropdown
+              id="mess-state-select"
+              label="State"
+              value={messState}
+              placeholder="Select your state"
+              options={states.map((state) => ({
+                label: state,
+                value: state,
+              }))}
+              onChange={(value) => handleMessStateChange(value)}
+              icon="fa-solid fa-map"
+            />
           </div>
+          {errors.messState && (
+            <p className="text-[11px] text-red-500 mt-1 pl-1">
+              {errors.messState}
+            </p>
+          )}
         </div>
       </div>
-
       {/* Shared Navigation Component */}
       <div className="mt-8">
         <OnboardingNavigation
           onBack={onBack}
-          onNext={onNext}
-          isNextDisabled={!isFormValid}
+          onNext={handleNext}
         />
       </div>
     </div>
