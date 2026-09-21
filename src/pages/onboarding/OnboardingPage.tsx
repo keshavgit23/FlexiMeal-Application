@@ -84,7 +84,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   const handleOnboardingComplete = async () => {
-      console.log('ONBOARDING COMPLETE CALLED');
+    console.log('ONBOARDING COMPLETE CALLED');
     setIsLoading(true);
     try {
       const token = await getToken();
@@ -93,9 +93,12 @@ export const OnboardingPage: React.FC = () => {
       }
       const response = await saveOnboardingDetails(formData, token);
       if (response.success) {
-      console.log('REDIRECTING TO USER HOME');
-      navigate('/user');
-    }
+        if (response.user.role === 'user') {
+          navigate('/user');
+        } else if (response.user.role === 'mess_owner') {
+          navigate('/mess-owner');
+        }
+      }
     } catch (error) {
       console.error('Onboarding submission failed:', error);
     } finally {

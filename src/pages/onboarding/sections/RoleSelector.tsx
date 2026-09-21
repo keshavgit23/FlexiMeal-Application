@@ -40,7 +40,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
       badge: 'Popular for Campus',
     },
     {
-      id: 'owner' as UserRole,
+      id: 'mess_owner' as UserRole,
       title: 'Mess Owner',
       description: 'Manage your mess, update menus and reach students.',
       icon: faUtensils,
