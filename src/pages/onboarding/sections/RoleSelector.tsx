@@ -3,7 +3,7 @@ import type { UserRole } from '../../../types/onboarding';
 import { OnboardingNavigation } from '../../../components/onboarding/OnboardingNavigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faGraduationCap,
+  faUser,
   faUtensils,
 } from '@fortawesome/free-solid-svg-icons';
 /**
@@ -11,7 +11,7 @@ import {
  * SCREEN 3 — ROLE SELECTOR
  * ============================================================================
  * Allows user to choose their FlexiMeal experience mode:
- *   - Student: discover messes, explore menus, book meals
+ *   - User: discover messes, explore menus, book meals
  *   - Mess Owner: manage mess profile, update daily menus, manage subscriptions
  *
  * UI-only selection using local React state.
@@ -33,10 +33,10 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
 }) => {
   const roles = [
     {
-      id: 'student' as UserRole,
-      title: 'Student',
+      id: 'user' as UserRole,
+      title: 'User',
       description: 'Find messes, view menus, book meals and more.',
-      icon: faGraduationCap,
+      icon: faUser,
       badge: 'Popular for Campus',
     },
     {

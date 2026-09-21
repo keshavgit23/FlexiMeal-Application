@@ -56,8 +56,8 @@ export default function AppLoader() {
 
       // User has completed onboarding
       switch (role) {
-        case "student":
-          navigate("/student", { replace: true });
+        case "user":
+          navigate("/user", { replace: true });
           break;
 
         case "mess_owner":
