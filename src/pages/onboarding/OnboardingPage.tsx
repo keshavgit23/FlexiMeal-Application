@@ -24,7 +24,6 @@ type OnboardingPhase =
   | 'aboard';
 
 export const OnboardingPage: React.FC = () => {
-  // Master routing state
   const [phase, setPhase] = useState<OnboardingPhase>('welcome');
   const [subStep, setSubStep] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
