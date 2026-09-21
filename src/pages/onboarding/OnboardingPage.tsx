@@ -7,7 +7,7 @@ import { OnboardingWelcome } from './sections/OnboardingWelcome';
 import { ProfileForm } from './sections/ProfileForm';
 import { RoleSelector } from './sections/RoleSelector';
 import { WelcomeAboard } from './sections/WelcomeAboard';
-import { StudentOnboarding } from '../../components/onboarding/StudentOnboarding';
+import { ConsumerOnboarding } from '../../components/onboarding/ConsumerOnboarding';
 import { MessOwnerOnboarding } from '../../components/onboarding/MessOwnerOnboarding';
 import { saveOnboardingDetails } from '../../apis/saveOnboardingDetails.api';
 
@@ -18,7 +18,7 @@ type OnboardingPhase =
   | 'welcome'
   | 'profile'
   | 'role'
-  | 'student_flow'
+  | 'consumer_flow'
   | 'mess_owner_flow'
   | 'complete'
   | 'aboard';
@@ -31,10 +31,8 @@ export const OnboardingPage: React.FC = () => {
     fullName: '',
     phone: '',
     avatarUrl: '',
-    role: 'student',
-    college: '',
-    city: 'Pune',
-    course: '',
+    role: 'user',
+    profession: '',
     dietaryPreference: 'veg',
     specialRequirements: [],
     messName: '',
@@ -48,30 +46,30 @@ export const OnboardingPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleToggleRequirement = (reqId: string) => {
-    setFormData((prev) => {
-      const exists = prev.specialRequirements.includes(reqId);
-      return {
-        ...prev,
-        specialRequirements: exists
-          ? prev.specialRequirements.filter((id) => id !== reqId)
-          : [...prev.specialRequirements, reqId],
-      };
-    });
-  };
+  // const handleToggleRequirement = (reqId: string) => {
+  //   setFormData((prev) => {
+  //     const exists = prev.specialRequirements.includes(reqId);
+  //     return {
+  //       ...prev,
+  //       specialRequirements: exists
+  //         ? prev.specialRequirements.filter((id) => id !== reqId)
+  //         : [...prev.specialRequirements, reqId],
+  //     };
+  //   });
+  // };
 
   // -------------------------------------------------------------
   // Phase Transitions
   // -------------------------------------------------------------
   const startBranchFlow = () => {
     setSubStep(1); // Reset sub-step when entering a branch
-    setPhase(formData.role === 'student' ? 'student_flow' : 'mess_owner_flow');
+    setPhase(formData.role === 'user' ? 'consumer_flow' : 'mess_owner_flow');
   };
 
   const handleSkip = () => {
     // Dynamic skip based on active phase
-    if (phase === 'student_flow' && subStep === 1) setSubStep(2);
-    else if (phase === 'student_flow' && subStep === 2) setPhase('complete');
+    if (phase === 'consumer_flow' && subStep === 1) setSubStep(2);
+    else if (phase === 'consumer_flow' && subStep === 2) setPhase('complete');
     else if (phase === 'mess_owner_flow' && subStep === 1) setPhase('complete');
     else {
       // Common skips 
@@ -86,6 +84,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   const handleOnboardingComplete = async () => {
+      console.log('ONBOARDING COMPLETE CALLED');
     setIsLoading(true);
     try {
       const token = await getToken();
@@ -93,14 +92,10 @@ export const OnboardingPage: React.FC = () => {
         throw new Error('Token unavailable');
       }
       const response = await saveOnboardingDetails(formData, token);
-
       if (response.success) {
-        if (response.user.role === 'student') {
-          navigate('/student');
-        } else if (response.user.role === 'mess_owner') {
-          navigate('/mess-owner');
-        }
-      }
+      console.log('REDIRECTING TO USER HOME');
+      navigate('/user');
+    }
     } catch (error) {
       console.error('Onboarding submission failed:', error);
     } finally {
@@ -114,7 +109,7 @@ export const OnboardingPage: React.FC = () => {
   let totalSteps = 4;
   let isMultiStep = false;
 
-  const roleMaxSteps = formData.role === 'student' ? 4 : 3;
+  const roleMaxSteps = formData.role === 'user' ? 4 : 3;
 
   if (phase === 'profile') {
     isMultiStep = true;
@@ -124,7 +119,7 @@ export const OnboardingPage: React.FC = () => {
     isMultiStep = true;
     currentStepNumber = 2;
     totalSteps = roleMaxSteps;
-  } else if (phase === 'student_flow') {
+  } else if (phase === 'consumer_flow') {
     isMultiStep = true;
     currentStepNumber = 2 + subStep; // subStep 1 (College) -> 3, subStep 2 (Food) -> 4
     totalSteps = 4;
@@ -172,13 +167,12 @@ export const OnboardingPage: React.FC = () => {
           />
         )}
 
-        {/* BRANCH: STUDENT */}
-        {phase === 'student_flow' && (
-          <StudentOnboarding
+        {/* BRANCH: CONSUMER */}
+        {phase === 'consumer_flow' && (
+          <ConsumerOnboarding
             step={subStep}
             formData={formData}
             updateFormField={updateFormField}
-            onToggleRequirement={handleToggleRequirement}
             onNextStep={() => setSubStep((s) => s + 1)}
             onPrevStep={() => setSubStep((s) => s - 1)}
             onBackToRole={() => setPhase('role')}

@@ -1,14 +1,15 @@
-// src/components/onboarding/StudentOnboarding.tsx
 import React from 'react';
-import { CollegeForm } from '../../pages/onboarding/sections/CollegeForm';
+import { ProfessionForm } from '../../pages/onboarding/sections/ProfessionForm';
 import { FoodPreferences } from '../../pages/onboarding/sections/FoodPreferences';
 import type { OnboardingData, DietaryPreference } from '../../types/onboarding';
 
-interface StudentOnboardingProps {
+interface ConsumerOnboardingProps {
   step: number;
   formData: OnboardingData;
-  updateFormField: (field: keyof OnboardingData, value: unknown) => void;
-  onToggleRequirement: (reqId: string) => void;
+  updateFormField: (
+    field: keyof OnboardingData,
+    value: unknown
+  ) => void;
   onNextStep: () => void;
   onPrevStep: () => void;
   onBackToRole: () => void;
@@ -16,11 +17,10 @@ interface StudentOnboardingProps {
   isLoading: boolean;
 }
 
-export const StudentOnboarding: React.FC<StudentOnboardingProps> = ({
+export const ConsumerOnboarding: React.FC<ConsumerOnboardingProps> = ({
   step,
   formData,
   updateFormField,
-  onToggleRequirement,
   onNextStep,
   onPrevStep,
   onBackToRole,
@@ -29,10 +29,8 @@ export const StudentOnboarding: React.FC<StudentOnboardingProps> = ({
 }) => {
   if (step === 1) {
     return (
-      <CollegeForm
-        college={formData.college}
-        city={formData.city}
-        course={formData.course}
+      <ProfessionForm
+        profession={formData.profession}
         onChange={updateFormField}
         onNext={onNextStep}
         onBack={onBackToRole}
@@ -44,12 +42,14 @@ export const StudentOnboarding: React.FC<StudentOnboardingProps> = ({
     return (
       <FoodPreferences
         dietaryPreference={formData.dietaryPreference}
-        specialRequirements={formData.specialRequirements}
         onSelectPreference={(pref: DietaryPreference) =>
           updateFormField('dietaryPreference', pref)
         }
-        onToggleRequirement={onToggleRequirement}
-        onNext={onComplete}
+        // onNext={onComplete}
+          onNext={() => {
+        console.log('FOOD PREFERENCES FINISH CLICKED');
+        onComplete();
+      }}
         onBack={onPrevStep}
         isLoading={isLoading}
       />
