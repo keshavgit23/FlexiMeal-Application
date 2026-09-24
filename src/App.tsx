@@ -3,7 +3,7 @@ import AuthPage from "./pages/auth/AuthPage";
 import SSOCallbackPage from "./routes/clerk-routes/SSO-Callback";
 import AppLoader from "./pages/loader/AppLoader";
 import {OnboardingPage} from "./pages/onboarding/OnboardingPage";
-import MessOwnerHomePage from "./pages/mess-owner/MessOwnerHomePage";
+import MessOwnerHomePage from "./pages/mess-partner/MessOwnerHomePage";
 import StudentHomePage from "./pages/user/UserHomePage";
 
 function App() {
