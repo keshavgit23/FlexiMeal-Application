@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useAuth } from '@clerk/react';
 import type { MessOwnerData } from '../../../types/messOnboarding';
 import { StudentPreviewCard } from './StudentPreviewCard';
 import { PublishBottomSheet } from '../publish/PublishBottomSheet';
 import { StickyActionBar } from '../shared/StickyActionBar';
-
+import { publishMess } from '../../../apis/mess-partner/MessPartnerSetup.api';
 export interface StudentPreviewProps {
   messData: MessOwnerData;
   onEdit: () => void;
@@ -20,16 +21,40 @@ export const StudentPreview: React.FC<StudentPreviewProps> = ({
   const [showConfirmSheet, setShowConfirmSheet] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
-  const handleConfirmPublish = () => {
+  const { getToken } = useAuth();
+  const handleConfirmPublish = async () => {
     setIsPublishing(true);
-    // Simulate network latency / publishing operation
-    setTimeout(() => {
-      setIsPublishing(false);
+
+    try {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error('Authentication token not available');
+      }
+
+      const response = await publishMess(token);
+
+      if (!response.success) {
+        throw new Error(
+          response.message || 'Failed to publish mess'
+        );
+      }
+
       setShowConfirmSheet(false);
       onPublishSuccess();
-    }, 1200);
-  };
+    } catch (error) {
+      console.error('Failed to publish mess:', error);
 
+      // Keep the confirmation sheet open so the owner can retry.
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to publish mess'
+      );
+    } finally {
+      setIsPublishing(false);
+    }
+  };
   return (
     <div className="flex flex-col min-h-full bg-stone-100">
       {/* OWNER PREVIEW BANNER */}

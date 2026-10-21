@@ -240,3 +240,55 @@ export const updateMessPhoto = async (
 
     return result;
 };
+
+//Publish Mess API
+export interface PublishMessResponse {
+    success: boolean;
+    data?: {
+        profileId: number;
+        listingStatus: 'LIVE';
+        publishedAt: string;
+    };
+    message?: string;
+}
+
+export const publishMess = async (
+    token: string
+): Promise<PublishMessResponse> => {
+    const response = await fetch(
+        `${API_URL}/api/v1/mess-partner/publish`,
+        {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    const responseText = await response.text();
+
+    console.log('Publish mess status:', response.status);
+    console.log('Publish mess response:', responseText);
+
+    let result: PublishMessResponse | {
+        success: false;
+        message?: string;
+    };
+
+    try {
+        result = JSON.parse(responseText);
+    } catch {
+        throw new Error('Invalid response from server');
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            'message' in result && result.message
+                ? result.message
+                : 'Failed to publish mess'
+        );
+    }
+
+    return result as PublishMessResponse;
+};

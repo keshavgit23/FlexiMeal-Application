@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface StatusBadgeProps {
-  status: 'DRAFT' | 'LIVE' | 'COMPLETED' | 'PENDING' | 'OPTIONAL';
+  status: 'DRAFT' | 'LIVE' | 'COMPLETED' | 'PENDING' | 'OPTIONAL' | 'UPCOMING';
   size?: 'sm' | 'md';
   showIcon?: boolean;
 }
@@ -69,6 +69,21 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       </span>
     );
   }
+
+  if (status === 'UPCOMING') {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-md border border-amber-300 bg-amber-100 text-amber-900 ${
+        size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
+      }`}
+    >
+      {showIcon && (
+        <i className="fa-solid fa-calendar-clock text-amber-700 text-[10px]" />
+      )}
+      <span>UPCOMING</span>
+    </span>
+  );
+}
 
   // OPTIONAL
   return (

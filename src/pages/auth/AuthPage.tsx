@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSignIn, useSignUp } from "@clerk/react";
-import { useAuth, useUser } from "@clerk/react";
+import { useAuth } from "@clerk/react";
 /* ==========================================================================
    TYPES & INTERFACES
    ========================================================================== */
@@ -62,17 +62,10 @@ export function AuthPage({
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const { signOut } = useAuth();
-  const { user } = useUser();
-  const { isSignedIn } = useAuth();
-
-  console.log("Clerk signed in:", isSignedIn);
-  console.log('User ID:', user?.id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Email:", email);
-    console.log("Password:", password);
     setMockLoading(true);
     setMockError(null);
 
@@ -94,8 +87,6 @@ export function AuthPage({
           setMockError(finalizeError.message);
           return;
         }
-
-        console.log("✅ Clerk sign-in successful");
 
         onSuccess?.();
       } else {

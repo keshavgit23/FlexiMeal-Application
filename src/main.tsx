@@ -4,7 +4,7 @@ import { ClerkProvider } from "@clerk/react";
 import { BrowserRouter } from "react-router-dom";
 import "./styles/index.css";
 import App from "./App.tsx";
-
+import { ToastProvider } from "./context/ToastContext";
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
@@ -16,8 +16,10 @@ createRoot(document.getElementById("root")!).render(
   signInUrl="/"
   signUpUrl="/"
   >
+    <ToastProvider>
     <BrowserRouter>
       <App />
     </BrowserRouter>
+    </ToastProvider>
   </ClerkProvider>
 );
