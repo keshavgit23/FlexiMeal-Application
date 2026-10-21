@@ -19,7 +19,7 @@ export const OperationalBottomNav: React.FC<OperationalBottomNavProps> = ({
 }) => {
   return (
     <nav
-      className="sticky bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-1.5 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-1.5 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
       aria-label="Operational navigation"
     >
       <div className="flex items-center justify-around max-w-md mx-auto">

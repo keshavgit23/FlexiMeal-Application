@@ -1,150 +1,7 @@
-// import { useState, useEffect } from 'react';
-// import type {
-//   AppScreen,
-//   FoodType,
-//   MealType,
-//   MessOwnerData,
-// } from '../../types/messOnboarding';
-// import { INITIAL_MESS_DATA } from '../../mockData';
-// import { SetupHub } from '../../components/mess-partner/setup/SetupHub';
-// import { MonthlyPriceScreen } from '../../components/mess-partner/profile/MonthlyPriceScreen';
-// import { MessProfileForm } from '../../components/mess-partner/profile/MessProfileForm';
-// import { StudentPreview } from '../../components/mess-partner/preview/StudentPreview';
-// import { PublishSuccess } from '../../components/mess-partner/publish/PublishSuccess';
-// import { OperationalHome } from '../../components/mess-partner/home/OperationalHome';
-
-// const STORAGE_KEY = 'fleximeal_mess_owner_state_v1';
-
-// export default function MessOwnerHomePage() {
-//   // Local storage loaded state (falls back cleanly to INITIAL_MESS_DATA)
-//   const [messData, setMessData] = useState<MessOwnerData>(() => {
-//     try {
-//       const saved = localStorage.getItem(STORAGE_KEY);
-//       if (saved) {
-//         return JSON.parse(saved);
-//       }
-//     } catch {
-//       // ignore storage errors
-//     }
-//     return INITIAL_MESS_DATA;
-//   });
-
-//   const [currentScreen, setCurrentScreen] = useState<AppScreen>(() => {
-//     // If mess is already published, enter Operational Kitchen Home immediately!
-//     return messData.isPublished ? 'OPERATIONAL_HOME' : 'SETUP_HUB';
-//   });
-
-//   const [showPublishSuccess, setShowPublishSuccess] = useState(false);
-
-//   // Persist updates to localStorage
-//   useEffect(() => {
-//     try {
-//       localStorage.setItem(STORAGE_KEY, JSON.stringify(messData));
-//     } catch {
-//       // ignore storage error
-//     }
-//   }, [messData]);
-
-//   // Handler: Save Monthly Price
-//   const handleSaveMonthlyPrice = (price: number) => {
-//     setMessData((prev) => ({
-//       ...prev,
-//       monthlyPrice: price,
-//     }));
-//     // Return to Setup Hub
-//     setCurrentScreen('SETUP_HUB');
-//   };
-
-//   // Handler: Save Mess Profile
-//   const handleSaveProfile = (profileData: {
-//     description: string;
-//     mealAvailability: MealType[];
-//     foodType: FoodType;
-//     photos: string[];
-//   }) => {
-//     setMessData((prev) => ({
-//       ...prev,
-//       description: profileData.description,
-//       mealAvailability: profileData.mealAvailability,
-//       foodType: profileData.foodType,
-//       photos: profileData.photos,
-//     }));
-//     // Return to Setup Hub
-//     setCurrentScreen('SETUP_HUB');
-//   };
-
-//   // Handler: Publish Completed
-//   const handlePublishSuccess = () => {
-//     setMessData((prev) => ({
-//       ...prev,
-//       isPublished: true,
-//       status: 'LIVE',
-//     }));
-//     setShowPublishSuccess(true);
-//   };
-
-//   const handleFinishPublishSuccess = () => {
-//     setShowPublishSuccess(false);
-//     setCurrentScreen('OPERATIONAL_HOME');
-//   };
-
-//   return (
-//     <div className="min-h-dvh w-full">
-//       {/* SCREEN ROUTING */}
-//       {currentScreen === 'SETUP_HUB' && (
-//         <SetupHub
-//           messData={messData}
-//           onOpenMonthlyPrice={() => setCurrentScreen('MONTHLY_PRICE')}
-//           onOpenProfile={() => setCurrentScreen('MESS_PROFILE')}
-//           onOpenPreview={() => setCurrentScreen('STUDENT_PREVIEW')}
-//         />
-//       )}
-
-//       {currentScreen === 'MONTHLY_PRICE' && (
-//         <MonthlyPriceScreen
-//           initialPrice={messData.monthlyPrice}
-//           onSave={handleSaveMonthlyPrice}
-//           onBack={() => setCurrentScreen('SETUP_HUB')}
-//         />
-//       )}
-
-//       {currentScreen === 'MESS_PROFILE' && (
-//         <MessProfileForm
-//           initialData={messData}
-//           onSave={handleSaveProfile}
-//           onBack={() => setCurrentScreen('SETUP_HUB')}
-//         />
-//       )}
-
-//       {currentScreen === 'STUDENT_PREVIEW' && (
-//         <StudentPreview
-//           messData={messData}
-//           onEdit={() => setCurrentScreen('MESS_PROFILE')}
-//           onPublishSuccess={handlePublishSuccess}
-//           onBack={() => setCurrentScreen('SETUP_HUB')}
-//         />
-//       )}
-
-//       {currentScreen === 'OPERATIONAL_HOME' && (
-//         <OperationalHome
-//           messData={messData}
-//           onEditProfile={() => setCurrentScreen('MESS_PROFILE')}
-//           onPreviewStudentView={() => setCurrentScreen('STUDENT_PREVIEW')}
-//         />
-//       )}
-
-//       {/* PUBLISH SUCCESS TRANSITION MODAL */}
-//       {showPublishSuccess && (
-//         <PublishSuccess onContinue={handleFinishPublishSuccess} />
-//       )}
-//     </div>
-//   );
-// }
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/react';
 import Toast from '../../components/ui-elements/Toast';
-
+import { useLocation, useNavigate } from 'react-router-dom';
 import type {
   AppScreen,
   FoodType,
@@ -178,6 +35,8 @@ export default function MessOwnerHomePage() {
     message: string;
   } | null>(null);
 
+  const location = useLocation();
+  const navigate = useNavigate();
   const loadMessPartnerSetup = async () => {
     try {
       setLoading(true);
@@ -302,6 +161,16 @@ export default function MessOwnerHomePage() {
     }
   };
 
+  useEffect(() => {
+    if (location.state?.toast) {
+      setToast(location.state.toast);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+    }
+  }, [location, navigate]);
   const handleSaveProfile = async (profileData: {
     description: string;
     mealAvailability: MealType[];
@@ -390,59 +259,71 @@ export default function MessOwnerHomePage() {
   };
 
   const handleUploadPhoto = async (photo: File) => {
-  try {
-    const token = await getToken();
+    try {
+      const token = await getToken();
 
-    if (!token) {
-      throw new Error('Authentication token not available');
-    }
+      if (!token) {
+        throw new Error('Authentication token not available');
+      }
 
-    const response = await updateMessPhoto(token, photo);
+      const response = await updateMessPhoto(token, photo);
 
-    if (!response.success || !response.data) {
-      throw new Error(
-        response.message || 'Failed to upload mess photo'
-      );
-    }
-    const photoUrl = response.data?.photoUrl;
-    setMessData((prev) =>
-      prev
-        ? {
+      if (!response.success || !response.data) {
+        throw new Error(
+          response.message || 'Failed to upload mess photo'
+        );
+      }
+      const photoUrl = response.data?.photoUrl;
+      setMessData((prev) =>
+        prev
+          ? {
             ...prev,
             photoUrl
           }
-        : prev
-    );
+          : prev
+      );
 
-    setToast({
-      type: 'success',
-      message: 'Mess photo uploaded successfully',
-    });
-  } catch (error) {
-    console.error('Failed to upload mess photo:', error);
+      setToast({
+        type: 'success',
+        message: 'Mess photo uploaded successfully',
+      });
+    } catch (error) {
+      console.error('Failed to upload mess photo:', error);
 
-    setToast({
-      type: 'error',
-      message:
-        error instanceof Error
-          ? error.message
-          : 'Failed to upload mess photo',
-    });
-  }
-};
+      setToast({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to upload mess photo',
+      });
+    }
+  };
 
+  // const handlePublishSuccess = () => {
+  //   setMessData((prev) =>
+  //     prev
+  //       ? {
+  //         ...prev,
+  //         isPublished: true,
+  //         status: 'LIVE',
+  //       }
+  //       : prev
+  //   );
+
+  //   setShowPublishSuccess(true);
+  // };
   const handlePublishSuccess = () => {
     setMessData((prev) =>
       prev
         ? {
           ...prev,
-          isPublished: true,
-          status: 'LIVE',
+          listingStatus: 'LIVE',
         }
         : prev
     );
 
-    setShowPublishSuccess(true);
+    setCurrentScreen('OPERATIONAL_HOME');
   };
 
   const handleFinishPublishSuccess = () => {
@@ -551,6 +432,8 @@ export default function MessOwnerHomePage() {
           onPreviewStudentView={() =>
             setCurrentScreen('STUDENT_PREVIEW')
           }
+          toast={toast}
+          onToastClose={() => setToast(null)}
         />
       )}
 

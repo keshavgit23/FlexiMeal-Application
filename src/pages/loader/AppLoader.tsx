@@ -34,8 +34,6 @@ export default function AppLoader() {
 
       const response = await authenticateUser(token);
 
-      console.log("Authentication response:", response);
-
       if (
         !response ||
         response.success !== true ||

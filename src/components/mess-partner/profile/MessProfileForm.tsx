@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import type { FoodType, MealType, MessOwnerData } from '../../../types/messOnboarding';
-import { SAMPLE_DEFAULT_DESCRIPTION } from '../../../mockData';
 import { MealAvailability } from './MealAvailability';
 import { FoodTypeSelector } from './FoodTypeSelector';
 import { PhotoSection } from './PhotoSection';
@@ -26,7 +25,7 @@ export const MessProfileForm: React.FC<MessProfileFormProps> = ({
   onBack,
 }) => {
   const [description, setDescription] = useState<string>(
-    initialData.description || SAMPLE_DEFAULT_DESCRIPTION
+    initialData.description ?? " "
   );
   const [mealAvailability, setMealAvailability] = useState<MealType[]>([
     ...(initialData.offersBreakfast ? ['breakfast' as const] : []),
@@ -94,9 +93,6 @@ export const MessProfileForm: React.FC<MessProfileFormProps> = ({
     }
   };
 
-  const handleUploadPhoto = async (photo: File) => {
-    await onUploadPhoto(photo);
-  };
   console.log('PROFILE INITIAL DATA:', initialData);
   console.log('PROFILE COMPLETED:', initialData.profileCompleted);
   console.log('PHOTO URL:', initialData.photoUrl);
@@ -163,7 +159,7 @@ export const MessProfileForm: React.FC<MessProfileFormProps> = ({
                 <span>Highlight nearby landmarks, unlimited rotis, or cleanliness</span>
                 <button
                   type="button"
-                  onClick={() => setDescription(SAMPLE_DEFAULT_DESCRIPTION)}
+                  onClick={() => setDescription(initialData.description ?? " ")}
                   className="text-emerald-700 font-semibold hover:underline"
                 >
                   Use suggestion
