@@ -34,8 +34,6 @@ export default function AppLoader() {
 
       const response = await authenticateUser(token);
 
-      console.log("Authentication response:", response);
-
       if (
         !response ||
         response.success !== true ||
@@ -56,8 +54,8 @@ export default function AppLoader() {
 
       // User has completed onboarding
       switch (role) {
-        case "student":
-          navigate("/student", { replace: true });
+        case "user":
+          navigate("/user", { replace: true });
           break;
 
         case "mess_owner":

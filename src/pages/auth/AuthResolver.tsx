@@ -25,7 +25,6 @@ export default function AuthResolver() {
 
     try {
       const token = await getToken();
-      console.log("Token available:", !!token);
       if (!token) {
         throw new Error('Token unavailable');
       }

@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'mess_owner';
+export type UserRole = 'user' | 'mess_owner';
 export type DietaryPreference = 'veg' | 'non_veg' | 'vegan' | 'jain' | 'eggetarian';
 
 export interface OnboardingData {
@@ -8,10 +8,9 @@ export interface OnboardingData {
   avatarUrl: string;
   role: UserRole;
 
-  // Student Specific Data
-  college: string;
-  city: string;
-  course: string;
+
+  // Consumer Specific Data
+  profession: string;
   dietaryPreference: DietaryPreference;
   specialRequirements: string[];
 

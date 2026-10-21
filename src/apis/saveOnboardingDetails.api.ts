@@ -4,10 +4,9 @@ export interface OnboardingPayload {
     fullName: string;
     phone: string;
     avatarUrl?: string;
-    role: 'student' | 'mess_owner';
+    role: 'user' | 'mess_owner';
 
-    college?: string;
-    city?: string;
+    profession?: string;
     dietaryPreference?: string;
 
     messName?: string;
@@ -19,7 +18,7 @@ export interface OnboardingPayload {
 export interface OnboardingResponse {
     success: boolean;
     user: {
-        role: 'student' | 'mess_owner';
+        role: 'user' | 'mess_owner';
         onboardingCompleted: boolean;
     };
 }
@@ -28,17 +27,14 @@ export const saveOnboardingDetails = async (
     data: OnboardingPayload,
     token: string
 ): Promise<OnboardingResponse> => {
-    const payload = {
-        ...data,
-        role: data.role === 'student' ? 'user' : 'mess_owner',
-    };
+   ;
     const response = await fetch(`${API_URL}/api/v1/auth/onboarding`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(data),
     });
 
     const responseText = await response.text();
