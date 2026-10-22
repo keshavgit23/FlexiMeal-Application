@@ -11,6 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
+        id: '/',
         name: 'FlexiMeal',
         short_name: 'FlexiMeal',
         description: 'Choice made simple',
