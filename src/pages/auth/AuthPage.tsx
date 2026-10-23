@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useSignIn, useSignUp } from "@clerk/react";
-import { useAuth } from "@clerk/react";
 /* ==========================================================================
    TYPES & INTERFACES
    ========================================================================== */
@@ -61,7 +60,6 @@ export function AuthPage({
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
-  const { signOut } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,9 +159,6 @@ export function AuthPage({
 
   return (
     <>
-      <button onClick={() => signOut()}>
-        Sign out
-      </button>
       <AuthLayout
         footer={
           <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
