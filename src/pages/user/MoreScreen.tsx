@@ -4,6 +4,7 @@ import {
   formatMealDate,
   formatMealTimeRange,
 } from '../../utils/dateTime';
+import { useClerk } from '@clerk/react';
 
 interface MoreScreenProps {
   activeSection: 'menu' | 'subscriptions' | 'payments' | 'bookings';
@@ -25,7 +26,7 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ activeSection, setActive
     myPaygBookingsError,
     refreshMyPaygBookings,
   } = useApp();
-
+  const { signOut } = useClerk();
   useEffect(() => {
     if (activeSection === 'payments') {
       void refreshPayments();
@@ -153,6 +154,30 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ activeSection, setActive
                 </span>
               </div>
             </div>
+            <i className="fa-solid fa-chevron-right text-xs text-[#9CA3AF]"></i>
+          </button>
+
+          {/* Logout Tile */}
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="w-full bg-white rounded-xl border border-[#FEE2E2] p-3.5 flex items-center justify-between text-left hover:bg-[#FEF2F2] active:scale-98 transition-all shadow-xs"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#FEF2F2] text-[#DC2626] flex items-center justify-center text-sm">
+                <i className="fa-solid fa-right-from-bracket"></i>
+              </div>
+
+              <div>
+                <span className="font-heading font-bold text-sm text-[#DC2626] block">
+                  Logout
+                </span>
+                <span className="text-xs text-[#6B7280]">
+                  Sign out of your FlexiMeal account
+                </span>
+              </div>
+            </div>
+
             <i className="fa-solid fa-chevron-right text-xs text-[#9CA3AF]"></i>
           </button>
         </div>
