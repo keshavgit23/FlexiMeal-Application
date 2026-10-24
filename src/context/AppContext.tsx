@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { useCallback } from "react";
 import { useAuth } from '@clerk/react';
 import type { ReactNode } from 'react';
@@ -29,6 +29,7 @@ import {
   getMyPaygBookings,
   type PaygBooking as MyPaygBooking,
 } from '../apis/user/getMyPaygBookings.api';
+import { getMyProfile } from '../apis/user/getMyProfile.api';
 interface AppContextType {
   // Navigation
   activeTab: 'home' | 'discover' | 'meals' | 'more';
@@ -70,7 +71,13 @@ interface AppContextType {
   ) => void;
 
   // Data
-  user: { name: string; phone: string; location: string };
+  user: {
+    name: string;
+    phone: string;
+    location: string;
+    avatar_url: string | null;
+    user_role: 'user' | 'mess_owner' | null;
+  };
   meals: ScheduledMeal[];
   payments: Payment[];
   notifications: AppNotification[];
@@ -123,6 +130,10 @@ interface AppContextType {
   isPaygMealsLoading: boolean;
   paygMealsError: string | null;
   refreshMyPaygBookings: () => Promise<MyPaygBooking[]>;
+
+  isUserProfileLoading: boolean;
+  userProfileError: string | null;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -166,11 +177,88 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const { getToken, isLoaded, isSignedIn } = useAuth();
   // User
-  const [user] = useState({
-    name: 'Krish Pawar',
-    phone: '+91 98234 11204',
-    location: 'Near FC Road, Pune',
+  // User profile from the backend
+  const [user, setUser] = useState({
+    name: '',
+    phone: '',
+    location: '',
+    avatar_url: null as string | null,
+    user_role: null as 'mess_owner' | 'user' | null,
   });
+
+  const [isUserProfileLoading, setIsUserProfileLoading] = useState(false);
+  const [userProfileError, setUserProfileError] = useState<string | null>(null);
+
+
+  const refreshUserProfile = useCallback(async (): Promise<void> => {
+    if (!isLoaded || !isSignedIn) {
+      setUser({
+        name: '',
+        phone: '',
+        location: '',
+        avatar_url: null,
+        user_role: null,
+      });
+
+      return;
+    }
+
+    try {
+      setIsUserProfileLoading(true);
+      setUserProfileError(null);
+
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await getMyProfile(token);
+      const profile = response.data;
+
+
+      if (profile.user_role !== 'mess_owner' && profile.user_role !== 'user') {
+        throw new Error('This account role is not supported by this application.');
+      }
+      setUser({
+        name: profile.full_name ?? '',
+        phone: profile.phone ?? '',
+        location: '',
+        avatar_url: profile.avatar_url,
+        user_role: profile.user_role,
+      });
+    } catch (error) {
+      setUserProfileError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch user profile'
+      );
+    } finally {
+      setIsUserProfileLoading(false);
+    }
+  }, [getToken, isLoaded, isSignedIn]);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      setUser({
+        name: '',
+        phone: '',
+        location: '',
+        avatar_url: null,
+        user_role: null,
+      });
+
+      setUserProfileError(null);
+      setIsUserProfileLoading(false);
+      return;
+    }
+
+    void refreshUserProfile();
+  }, [isLoaded, isSignedIn, refreshUserProfile]);
 
   // Scheduled meals
   const [meals, setMeals] = useState<ScheduledMeal[]>([]);
@@ -778,6 +866,9 @@ const [notifications, setNotifications] = useState<AppNotification[]>([]);
         pendingPaymentDetails,
         setPendingPaymentDetails,
         user,
+        isUserProfileLoading,
+        userProfileError,
+        refreshUserProfile,
         activeSubscriptions,
         meals,
         notifications,
