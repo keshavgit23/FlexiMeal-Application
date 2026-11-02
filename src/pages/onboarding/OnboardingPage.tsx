@@ -84,23 +84,47 @@ export const OnboardingPage: React.FC = () => {
   };
 
   const handleOnboardingComplete = async () => {
-    console.log('ONBOARDING COMPLETE CALLED');
+    console.log('[ONBOARDING] Handler started');
+
     setIsLoading(true);
+
     try {
       const token = await getToken();
+
+      console.log('[ONBOARDING] Token received:', !!token);
+
       if (!token) {
         throw new Error('Token unavailable');
       }
+
       const response = await saveOnboardingDetails(formData, token);
-      if (response.success) {
-        if (response.user.role === 'user') {
-          navigate('/user');
-        } else if (response.user.role === 'mess_owner') {
-          navigate('/mess-owner');
+
+      console.log('[ONBOARDING] API response:', response);
+      console.log('[ONBOARDING] Success:', response.success);
+      console.log('[ONBOARDING] Role:', response.user?.role);
+      console.log(
+        '[ONBOARDING] Completed:',
+        response.user?.onboardingCompleted
+      );
+
+      if (response.success && response.user.onboardingCompleted) {
+        const destination =
+          response.user.role === 'user'
+            ? '/user'
+            : response.user.role === 'mess_owner'
+              ? '/mess-owner'
+              : null;
+
+        console.log('[ONBOARDING] Destination:', destination);
+
+        if (destination) {
+          console.log('[ONBOARDING] Navigating now...');
+          navigate(destination, { replace: true });
         }
       }
+
     } catch (error) {
-      console.error('Onboarding submission failed:', error);
+      console.error('[ONBOARDING] Failed:', error);
     } finally {
       setIsLoading(false);
     }

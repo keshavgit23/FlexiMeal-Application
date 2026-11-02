@@ -50,14 +50,5 @@ export const saveOnboardingDetails = async (
             result.success ? 'Failed to save onboarding details' : 'Onboarding failed'
         );
     }
-    return {
-        ...result,
-        user: {
-            ...result.user,
-            role:
-                result.user.role === 'user'
-                    ? 'student'
-                    : result.user.role,
-        },
-    };
+    return result;
 };
