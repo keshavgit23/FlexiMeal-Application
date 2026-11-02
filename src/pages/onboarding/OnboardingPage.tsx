@@ -10,7 +10,7 @@ import { WelcomeAboard } from './sections/WelcomeAboard';
 import { ConsumerOnboarding } from '../../components/onboarding/ConsumerOnboarding';
 import { MessOwnerOnboarding } from '../../components/onboarding/MessOwnerOnboarding';
 import { saveOnboardingDetails } from '../../apis/saveOnboardingDetails.api';
-
+import {useApp} from '../../context/AppContext';
 
 import type { OnboardingData, UserRole } from '../../types/onboarding';
 
@@ -40,6 +40,7 @@ export const OnboardingPage: React.FC = () => {
     messCity: '',
     messState: '',
   });
+  const { refreshUserProfile } = useApp();
   const { getToken } = useAuth();
   const navigate = useNavigate();
   const updateFormField = (field: keyof OnboardingData, value: unknown) => {
@@ -108,6 +109,7 @@ export const OnboardingPage: React.FC = () => {
       );
 
       if (response.success && response.user.onboardingCompleted) {
+         await refreshUserProfile();
         const destination =
           response.user.role === 'user'
             ? '/user'
