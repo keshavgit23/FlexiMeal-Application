@@ -30,7 +30,7 @@ export const FoodPreferences: React.FC<FoodPreferencesProps> = ({
   const preferences: Array<{ id: DietaryPreference; label: string; icon: string }> = [
     { id: 'veg', label: 'Veg', icon: 'fa-solid fa-leaf' },
     { id: 'non_veg', label: 'Non-Veg', icon: 'fa-solid fa-drumstick-bite' },
-    { id: 'eggetarian', label: 'Eggetarian', icon: 'fa-solid fa-egg' },
+    { id: 'both', label: 'Both', icon: 'fa-solid fa-utensils' },
   ];
 
   return (
