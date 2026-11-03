@@ -1,5 +1,5 @@
 export type UserRole = 'user' | 'mess_owner';
-export type DietaryPreference = 'veg' | 'non_veg' | 'vegan' | 'jain' | 'eggetarian';
+export type DietaryPreference = 'veg' | 'non_veg' | 'vegan' | 'jain' | 'both';
 
 export interface OnboardingData {
   // Common Data
