@@ -39,14 +39,14 @@ export const SetupStatus: React.FC<SetupStatusProps> = ({
             <StatusBadge status="DRAFT" size="sm" />
             <span className="text-xs font-semibold text-gray-600">
               {isReadyToPublish
-                ? 'Ready for Student Review'
-                : 'Hidden from students'}
+                ? 'Ready for Review'
+                : 'Hidden from users'}
             </span>
           </div>
           <p className="text-xs text-gray-700 leading-relaxed">
             {isReadyToPublish
-              ? 'Your mess information is complete. Preview how it appears to students and take it live whenever you are ready.'
-              : 'Students cannot discover your mess yet. Complete the required pricing and profile steps to publish it.'}
+              ? 'Your mess information is complete. Preview how it appears to users and take it live whenever you are ready.'
+              : 'Users cannot discover your mess yet. Complete the required pricing and profile steps to publish it.'}
           </p>
         </div>
       </div>

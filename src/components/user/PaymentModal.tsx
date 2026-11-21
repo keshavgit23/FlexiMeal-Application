@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
+type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER';
 interface PaymentModalProps {
   profileId: number;
   messName: string;
   amount: number;
-  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER';
+  planId?: number;
+  upiId: string | null;
+  planName?: string;
+  mealTypes?: MealType[];
+  mealType?: MealType;
   defaultResponse: 'YES' | 'NO';
   onClose: () => void;
 }
@@ -14,15 +19,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   profileId,
   messName,
   amount,
+  planId,
+  upiId,
+  planName,
+  mealTypes,
   mealType,
   defaultResponse,
   onClose,
 }) => {
   const { submitPayment, setShowSubscriptionHook } = useApp();
   const { showToast } = useToast();
-
-  const upiId = 'rajeshwari.mess@okaxis';
-
   const [utrNumber, setUtrNumber] = useState('');
   const [proofFileName, setProofFileName] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -33,14 +39,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setProofFileName(e.target.files[0].name);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const trimmedUtr = utrNumber.trim();
 
     if (!/^\d{12,}$/.test(trimmedUtr)) {
-      setErrorMsg('Please enter a valid UTR number with at least 12 digits.');
+      setErrorMsg(
+        'Please enter a valid UTR number with at least 12 digits.'
+      );
       return;
     }
 
@@ -48,13 +55,29 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const result = await submitPayment(
+      const paymentData = {
         profileId,
-        amount,
-        mealType,
         defaultResponse,
-        trimmedUtr,
-        null
+        utr: trimmedUtr,
+        proofUrl: null,
+      };
+
+      console.log('Submitting payment with data:', paymentData);
+      const result = await submitPayment(
+        planId !== undefined
+          ? {
+            ...paymentData,
+            planId,
+          }
+          : mealType
+            ? {
+              ...paymentData,
+              amount,
+              mealType,
+            }
+            : (() => {
+              throw new Error('Plan or meal type is required');
+            })()
       );
 
       if (result.success) {
@@ -62,7 +85,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           'Payment submitted successfully. Your subscription is pending verification.',
           'success'
         );
-        console.log('SETTING SUBSCRIPTION HOOK');
+
         setShowSubscriptionHook(true);
         setSubmitted(true);
         onClose();
@@ -72,6 +95,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         error instanceof Error
           ? error.message
           : 'Payment submission failed. Please try again.';
+
       showToast(message, 'error');
       setErrorMsg(message);
     } finally {
@@ -119,7 +143,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   Payment verification pending
                 </h3>
                 <p className="text-xs text-[#6B7280] leading-relaxed">
-                  Your payment receipt of <strong>₹{amount.toLocaleString()}</strong> has been submitted to {messName}.
+                  Your payment of <strong>₹{amount.toLocaleString()}</strong>
+                  {planId !== undefined && planName
+                    ? ` for ${planName}`
+                    : ''}
+                  {' '}has been submitted to {messName}.
                 </p>
                 <div className="mt-3 pt-3 border-t border-[#FFEDD5] text-[11px] text-[#9A3412] font-medium">
                   Reference UTR: <span className="font-mono font-bold">{utrNumber}</span>
@@ -153,7 +181,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               {/* Payment Amount Card */}
               <div className="bg-[#FFF8EE] rounded-xl p-3.5 border border-[#FFEDD5] flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] text-[#9A3412] block">Payment of ₹{amount} for {mealType.toLowerCase()}</span>
+                  <span className="text-[11px] text-[#9A3412] block">
+                    {planId !== undefined
+                      ? `${planName} · ${mealTypes?.join(' + ')}`
+                      : `Payment for ${mealType?.toLowerCase()}`}
+                  </span>
                   <span className="font-heading font-bold text-sm text-[#7C2D12]">{messName}</span>
                 </div>
                 <div className="text-right">
@@ -170,7 +202,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   Step 1: Transfer using UPI
                 </span>
 
-                <div className="flex items-center justify-between p-2.5 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
+                {/* <div className="flex items-center justify-between p-2.5 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
                   <div>
                     <span className="text-[10px] text-[#6B7280] block">Mess UPI ID</span>
                     <span className="font-mono font-bold text-xs text-[#111827]">{upiId}</span>
@@ -182,18 +214,31 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   >
                     <i className="fa-regular fa-copy mr-1"></i>Copy
                   </button>
-                </div>
+                </div> */}
+                {upiId ? (
+                  <div className="flex items-center justify-between p-2.5 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
+                    <div>
+                      <span className="text-[10px] text-[#6B7280] block">Mess UPI ID</span>
+                      <span className="font-mono font-bold text-xs text-[#111827]">
+                        {upiId}
+                      </span>
+                    </div>
 
-                {/* Simulated QR block */}
-                <div className="flex items-center gap-3 p-2 bg-[#F3F4F6] rounded-lg">
-                  <div className="w-14 h-14 bg-white border border-[#D1D5DB] rounded flex items-center justify-center shrink-0">
-                    <i className="fa-solid fa-qrcode text-2xl text-[#111827]"></i>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(upiId)}
+                      className="text-xs font-semibold text-[#DC2626] hover:underline px-2 py-1"
+                    >
+                      <i className="fa-regular fa-copy mr-1"></i>Copy
+                    </button>
                   </div>
-                  <div className="text-xs text-[#4B5563]">
-                    <span className="font-semibold text-[#111827] block">Scan in GPay / PhonePe / Paytm</span>
-                    <span className="text-[11px] text-[#6B7280]">Pay exactly ₹{amount} and copy 12-digit UTR</span>
+                ) : (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-xs text-red-700 font-medium">
+                      This mess has not configured a UPI ID yet. Please contact the mess owner.
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* UTR Reference Input */}

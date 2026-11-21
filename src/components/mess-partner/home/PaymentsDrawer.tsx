@@ -6,12 +6,14 @@ import {
     rejectMessPayment,
 } from "../../../apis/mess-partner/paymentActions.api";
 import { useToast } from "../../../context/ToastContext";
+import type { MealType } from "../../../utils/mealsValidation";
 interface PendingPayment {
     payment_id: number;
     user_id: string;
     profile_id: number;
     amount: string;
-    meal_type: "BREAKFAST" | "LUNCH" | "DINNER";
+    upi_id: string;
+    meal_type: MealType | null;
     default_response: "YES" | "NO";
     utr: string;
     proof_url: string | null;
@@ -20,13 +22,18 @@ interface PendingPayment {
     updated_at: string;
     mess_name: string;
     user_name: string;
+    plan_id: number | null;
+    plan_name: string | null;
+    meal_types: MealType[] | null;
 }
 
 interface PaymentsDrawerProps {
     onClose: () => void;
 }
 
-const formatMealType = (mealType: PendingPayment["meal_type"]) => {
+const formatMealType = (mealType: string | null | undefined) => {
+    if (!mealType) return 'Custom Plan';
+
     return mealType.charAt(0) + mealType.slice(1).toLowerCase();
 };
 
@@ -39,6 +46,13 @@ const formatDateTime = (date: string) => {
     });
 };
 
+const getPaymentDescription = (payment: PendingPayment) => {
+    if (payment.plan_name) {
+        return `${payment.plan_name} · ${payment.meal_types?.join(" + ") || ""}`;
+    }
+
+    return formatMealType(payment.meal_type);
+};
 export const PaymentsDrawer: React.FC<PaymentsDrawerProps> = ({
     onClose,
 }) => {
@@ -212,7 +226,7 @@ export const PaymentsDrawer: React.FC<PaymentsDrawerProps> = ({
                                         </h3>
 
                                         <p className="mt-0.5 text-[11px] text-gray-500">
-                                            {formatMealType(payment.meal_type)}
+                                            {getPaymentDescription(payment)}
                                         </p>
                                     </div>
 
@@ -229,7 +243,7 @@ export const PaymentsDrawer: React.FC<PaymentsDrawerProps> = ({
                                         </span>
 
                                         <span className="text-xs font-semibold text-[#7C2D12]">
-                                            {formatMealType(payment.meal_type)}
+                                            {getPaymentDescription(payment)}
                                         </span>
                                     </div>
 

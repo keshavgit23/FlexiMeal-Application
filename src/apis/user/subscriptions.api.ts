@@ -1,3 +1,5 @@
+import type { MealType } from "../../utils/mealsValidation";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export interface ActiveSubscription {
@@ -13,6 +15,10 @@ export interface ActiveSubscription {
   updated_at: string;
   mess_name: string;
   monthly_price: string | number;
+  plan_name: string | null;
+  meal_types: MealType[] | null;
+  plan_id: number | null;
+  upi_id: string | null;
 }
 
 

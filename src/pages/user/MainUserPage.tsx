@@ -80,6 +80,10 @@ const MainUserPage: React.FC = () => {
             profileId={pendingPaymentDetails.profileId}
             messName={pendingPaymentDetails.messName}
             amount={pendingPaymentDetails.amount}
+            planId={pendingPaymentDetails.planId}
+            upiId={pendingPaymentDetails.upiId}
+            planName={pendingPaymentDetails.planName}
+            mealTypes={pendingPaymentDetails.mealTypes}
             mealType={pendingPaymentDetails.mealType}
             defaultResponse={pendingPaymentDetails.defaultResponse}
             onClose={() => setIsPaymentModalOpen(false)}

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ScheduledMeal, MealStatus} from '../../types/user';
 import type { ActiveSubscription } from '../../apis/user/subscriptions.api';
+import { formatMealTime } from '../../utils/dateTime';
 
 interface MealConfirmationProps {
   meal: ScheduledMeal;
@@ -34,7 +35,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
               </span>
             )}
           </div>
-          <span className="text-xs text-[#6B7280]">Cutoff: {meal.cutoffTime}</span>
+          <span className="text-xs text-[#6B7280]">Cutoff: {formatMealTime(meal.cutoffTime)}</span>
         </div>
         <div className="text-xs text-[#4B5563] truncate mb-2.5">
           {meal.messName} · {meal.menu.slice(0, 3).join(' • ')}
@@ -90,7 +91,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
         </div>
         <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
           <i className="fa-regular fa-clock text-[11px]"></i>
-          <span>Cutoff: {meal.cutoffTime}</span>
+          <span>Cutoff: {formatMealTime(meal.cutoffTime)}</span>
         </div>
       </div>
 

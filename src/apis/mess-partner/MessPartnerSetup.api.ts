@@ -292,3 +292,74 @@ export const publishMess = async (
 
     return result as PublishMessResponse;
 };
+
+export interface CreateMessPlanPayload {
+  plan_name: string;
+  target_gender: 'MALE' | 'FEMALE' | 'ALL';
+  price: number;
+  meal_types: ('BREAKFAST' | 'LUNCH' | 'DINNER')[];
+}
+
+export const createMessPlan = async (
+  token: string,
+  payload: CreateMessPlanPayload
+) => {
+  const response = await fetch(
+    `${API_URL}/api/v1/mess-partner/plans`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const data = await response.text();
+  console.log("Data: ", data);
+
+  if (!response.ok) {
+    throw new Error('Failed to create mess plan');
+  }
+
+  return data;
+};
+
+export interface MessPlan {
+  plan_id: number;
+  profile_id: number;
+  plan_name: string;
+  target_gender: 'MALE' | 'FEMALE' | 'ALL';
+  price: string | number;
+  is_active: boolean;
+  created_at: string;
+  meal_types: ('BREAKFAST' | 'LUNCH' | 'DINNER')[];
+}
+
+export interface GetMessPlansResponse {
+  success: boolean;
+  data: MessPlan[];
+}
+
+export const getMessPlans = async (
+  token: string
+): Promise<GetMessPlansResponse> => {
+  const response = await fetch(
+    `${API_URL}/api/v1/mess-partner/plans`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to fetch mess plans');
+  }
+
+  return data;
+};

@@ -9,6 +9,7 @@ import {
 interface PAYGModalProps {
   initialMessId?: string | null;
   onClose: () => void;
+  planId?: number;
 }
 
 interface PaygMess {

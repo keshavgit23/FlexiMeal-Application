@@ -2,13 +2,11 @@ import React from 'react';
 import { StatusBadge } from '../shared/StatusBadge';
 
 export interface ListingStatusProps {
-  monthlyPrice: number | null;
   onEditProfile: () => void;
   onPreviewStudentView: () => void;
 }
 
 export const ListingStatus: React.FC<ListingStatusProps> = ({
-  monthlyPrice,
   onEditProfile,
   onPreviewStudentView,
 }) => {
@@ -25,12 +23,6 @@ export const ListingStatus: React.FC<ListingStatusProps> = ({
             </span>
             <StatusBadge status="LIVE" size="sm" />
           </div>
-          <div className="text-xs text-gray-600 truncate">
-            <span className="font-bold text-gray-900">
-              ₹{monthlyPrice?.toLocaleString('en-IN') || '2,200'}
-            </span>{' '}
-            / month standard rate
-          </div>
         </div>
       </div>
 
@@ -40,7 +32,7 @@ export const ListingStatus: React.FC<ListingStatusProps> = ({
           onClick={onPreviewStudentView}
           aria-label="Preview public listing"
           className="w-8 h-8 rounded-lg bg-stone-100 text-gray-600 hover:bg-stone-200 flex items-center justify-center text-xs transition"
-          title="Student View Preview"
+          title="User View Preview"
         >
           <i className="fa-solid fa-eye" />
         </button>
