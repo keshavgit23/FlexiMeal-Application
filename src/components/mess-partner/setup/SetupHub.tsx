@@ -8,38 +8,41 @@ import { StickyActionBar } from '../shared/StickyActionBar';
 
 export interface SetupHubProps {
   messData: MessOwnerData;
-  onOpenMonthlyPrice: () => void;
+  onOpenMessPlans: () => void;
   onOpenProfile: () => void;
   onOpenPreview: () => void;
+  hasPlans: boolean;
+  initialTab: 'shift' | 'listing';
 }
 
 export const SetupHub: React.FC<SetupHubProps> = ({
   messData,
-  onOpenMonthlyPrice,
+  onOpenMessPlans,
   onOpenProfile,
   onOpenPreview,
+  hasPlans,
 }) => {
-  const isPriceSet = messData.monthlyPrice !== null && messData.monthlyPrice > 0;
 const hasMealOffering =
   messData.offersBreakfast ||
   messData.offersLunch ||
   messData.offersDinner;
 
-  const isProfileSet =
-  Boolean(messData.description?.trim()) &&
-  hasMealOffering;
+const isProfileSet =
+  Boolean(messData.description?.trim()) && hasMealOffering;
 
+// Onboarding + at least one plan + profile
+let completedRequiredCount = 1;
 
-  // Onboarding = 1 step done (33%). With Price = 66%. With Profile = 100%.
-  let completedRequiredCount = 1; // Onboarding verified
-  if (isPriceSet) completedRequiredCount += 1;
-  if (isProfileSet) completedRequiredCount += 1;
+if (hasPlans) completedRequiredCount += 1;
+if (isProfileSet) completedRequiredCount += 1;
 
-  const totalRequired = 3;
-  const progressPercent = Math.round(
-    (completedRequiredCount / totalRequired) * 100
-  );
-  const isReadyToPublish = progressPercent >= 100;
+const totalRequired = 3;
+
+const progressPercent = Math.round(
+  (completedRequiredCount / totalRequired) * 100
+);
+
+const isReadyToPublish = progressPercent >= 100;
 
   return (
     <div className="flex flex-col min-h-full bg-stone-50/60">
@@ -60,9 +63,6 @@ const hasMealOffering =
 
           <div className="text-right shrink-0 flex flex-col items-end">
             <StatusBadge status="DRAFT" size="sm" />
-            <span className="text-[10px] text-gray-500 font-medium mt-1">
-              Hidden from students
-            </span>
           </div>
         </div>
       </header>
@@ -88,8 +88,9 @@ const hasMealOffering =
         {/* CHECKLIST */}
         <SetupChecklist
           messData={messData}
-          onOpenMonthlyPrice={onOpenMonthlyPrice}
+          hasPlans={hasPlans}
           onOpenProfile={onOpenProfile}
+          onOpenMessPlans={onOpenMessPlans}
         />
 
         {/* STATUS CALLOUT */}
@@ -119,11 +120,11 @@ const hasMealOffering =
               <span>Complete Required Steps to Publish</span>
             </button>
             <p className="text-[11px] text-center text-gray-500 font-medium">
-              {!isPriceSet && !isProfileSet
-                ? 'Add your Monthly Price and Profile details above'
-                : !isPriceSet
-                ? 'Tap "Monthly Price" to set your base rate'
-                : 'Tap "Mess Profile & Meals" to finish setup'}
+              {!hasPlans && !isProfileSet
+                ? 'Create a mess plan and add your profile details above'
+                : !hasPlans
+                  ? 'Tap "Mess Plans" to create your first plan'
+                  : 'Tap "Mess Profile & Meals" to finish setup'}
             </p>
           </div>
         )}

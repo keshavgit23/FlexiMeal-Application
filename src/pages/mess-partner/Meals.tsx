@@ -59,7 +59,7 @@ export const Meals: React.FC<MealsProps> = ({ initialDate }) => {
   // Errors State
   const [errors, setErrors] = useState<MealFormErrors>({});
   const [showValidationBanner, setShowValidationBanner] = useState<boolean>(false);
-  const [clientValidationPassed, setClientValidationPassed] = useState<boolean>(false);
+  const [, setClientValidationPassed] = useState<boolean>(false);
   const [isLoadingMeal, setIsLoadingMeal] = useState(false);
 
   const [toast, setToast] = useState<{
@@ -384,29 +384,7 @@ export const Meals: React.FC<MealsProps> = ({ initialDate }) => {
             </button>
           </div>
         )}
-
-        {/* Validation Success Feedback Banner (Client-side validation only) */}
-        {clientValidationPassed && (
-          <div
-            role="status"
-            className="mb-5 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3 animate-fadeIn"
-          >
-            <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5">
-              <i className="fa-solid fa-check text-xs" aria-hidden="true" />
-            </div>
-            <div className="flex-1 text-xs text-emerald-900">
-              <p className="font-bold text-sm text-emerald-950">Client-Side Validation Passed</p>
-              <p className="mt-1 leading-relaxed text-emerald-800">
-                The form is completely valid and ready for the backend integration.
-              </p>
-              <p className="mt-1.5 font-mono text-[11px] text-emerald-900 bg-emerald-100/60 p-1.5 rounded-lg border border-emerald-200">
-                // TODO: Connect POST /operational/meals API
-              </p>
-            </div>
-          </div>
-        )}
-
-
+        
         {isEditMode && isLoadingMeal ? (
           <div className="flex items-center justify-center py-20">
             <p className="text-sm font-semibold text-gray-500">

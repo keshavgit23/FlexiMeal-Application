@@ -59,6 +59,9 @@ export type ListingStatus = 'DRAFT' | 'LIVE';
 export type AppScreen =
   | 'SETUP_HUB'
   | 'MONTHLY_PRICE'
+  | 'CREATE_MESS_PLAN'
+  | 'MESS_PLAN_OVERVIEW'
+  | 'MESS_PLANS'
   | 'MESS_PROFILE'
   | 'STUDENT_PREVIEW'
   | 'OPERATIONAL_HOME';
@@ -67,7 +70,9 @@ export type OperationalTab =
   | 'shift'
   | 'schedule'
   | 'listing'
+  | 'overview'
   | 'settings';
+
 
 export type OperationalStatusMode =
   | 'NORMAL'
@@ -120,3 +125,4 @@ export interface ShiftData {
 }
 
 export type ViewportSize = '360' | '390' | '430' | 'FULL';
+

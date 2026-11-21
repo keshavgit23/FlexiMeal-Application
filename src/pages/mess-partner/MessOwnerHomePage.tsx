@@ -8,23 +8,37 @@ import type {
   MealType,
   MessOwnerData,
 } from '../../types/messOnboarding';
-
-import { getMessPartnerSetup, updateMessProfile, updateMonthlyPrice, updateMessPhoto } from '../../apis/mess-partner/MessPartnerSetup.api';
-
+import { getMessPartnerSetup, updateMessProfile, updateMessPhoto } from '../../apis/mess-partner/MessPartnerSetup.api';
+import {
+  getMessPlans,
+  type MessPlan,
+} from '../../apis/mess-partner/MessPartnerSetup.api';
 import { SetupHub } from '../../components/mess-partner/setup/SetupHub';
-import { MonthlyPriceScreen } from '../../components/mess-partner/profile/MonthlyPriceScreen';
 import { MessProfileForm } from '../../components/mess-partner/profile/MessProfileForm';
 import { StudentPreview } from '../../components/mess-partner/preview/StudentPreview';
 import { PublishSuccess } from '../../components/mess-partner/publish/PublishSuccess';
 import { OperationalHome } from '../../components/mess-partner/home/OperationalHome';
 import type { ToastType } from '../../types/ui-elements/toast';
 
+import {
+  createMessPlan,
+  type CreateMessPlanPayload,
+} from '../../apis/mess-partner/MessPartnerSetup.api';
+
+import { MessPlanScreen } from '../../components/mess-partner/profile/MessPlanScreen';
+import MessPlans from '../../components/mess-partner/profile/MessPlansOverview';
+import { validateMessPlan } from '../../utils/messPlanValidation';
+import { useToast } from "../../context/ToastContext";
+import MessPlansOverview from '../../components/mess-partner/profile/MessPlansOverview';
+
 export default function MessOwnerHomePage() {
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   const [messData, setMessData] = useState<MessOwnerData | null>(null);
   const [currentScreen, setCurrentScreen] =
     useState<AppScreen>('SETUP_HUB');
+  const [initialTab, setInitialTab] = useState<'shift' | 'listing'>('shift');
 
   const [showPublishSuccess, setShowPublishSuccess] = useState(false);
 
@@ -35,8 +49,12 @@ export default function MessOwnerHomePage() {
     message: string;
   } | null>(null);
 
+  const [plans, setPlans] = useState<MessPlan[]>([]);
+  const [planReturnTo, setPlanReturnTo] = useState<'setup' | 'listing'>('setup');
+  const hasPlans = plans.length > 0;
   const location = useLocation();
   const navigate = useNavigate();
+
   const loadMessPartnerSetup = async () => {
     try {
       setLoading(true);
@@ -48,32 +66,20 @@ export default function MessOwnerHomePage() {
         throw new Error('Authentication token not available');
       }
 
+      // 1. Load essential mess setup data first
       const response = await getMessPartnerSetup(token);
-
       const { user, mess } = response.data;
 
-      /*
-       * Convert backend response into the existing
-       * MessOwnerData shape used by the UI components.
-       */
+      // 2. Normalize backend response
       const normalizedData: MessOwnerData = {
-        // Existing onboarding information
         name: mess.name,
         address: mess.address,
         city: mess.city,
         state: mess.state,
 
-        // Setup information
         monthlyPrice: mess.monthlyPrice,
         description: mess.description ?? '',
         foodType: (mess.foodType ?? '') as FoodType,
-
-        // mealAvailability: [
-        //   ...(mess.offersBreakfast ? ['BREAKFAST'] : []),
-        //   ...(mess.offersLunch ? ['LUNCH'] : []),
-        //   ...(mess.offersDinner ? ['DINNER'] : []),
-        // ] as MealType[],
-        // foodType: mess.foodType ?? null,
 
         offersBreakfast: mess.offersBreakfast,
         offersLunch: mess.offersLunch,
@@ -82,35 +88,34 @@ export default function MessOwnerHomePage() {
         listingStatus: mess.listingStatus,
         publishedAt: mess.publishedAt,
 
-        // // Photos are not stored in the current DB schema yet
-        // photos: []
         profileId: mess.profileId,
         userId: user.userId,
 
-
-        // IMPORTANT: backend values
         photoUrl: mess.photoUrl,
         profileCompleted: mess.profileCompleted,
       };
 
-      console.log('MESS SETUP FROM API:', {
-        profileCompleted: mess.profileCompleted,
-        photoUrl: mess.photoUrl,
-        description: mess.description,
-        foodType: mess.foodType,
-        offersBreakfast: mess.offersBreakfast,
-        offersLunch: mess.offersLunch,
-        offersDinner: mess.offersDinner,
-      });
-
+      // 3. Set essential data
       setMessData(normalizedData);
+
       console.log('NORMALIZED MESS DATA:', normalizedData);
 
+      // 4. Determine which dashboard to show
       setCurrentScreen(
         mess.listingStatus === 'LIVE'
           ? 'OPERATIONAL_HOME'
           : 'SETUP_HUB'
       );
+
+      // 5. Load plans independently
+      try {
+        const plansResponse = await getMessPlans(token);
+        setPlans(plansResponse.data);
+      } catch (planError) {
+        console.error('Failed to load mess plans:', planError);
+        setPlans([]);
+      }
+
     } catch (err) {
       console.error('Failed to load mess partner setup:', err);
 
@@ -128,36 +133,63 @@ export default function MessOwnerHomePage() {
     loadMessPartnerSetup();
   }, []);
 
-  const handleSaveMonthlyPrice = async (price: number) => {
-    if (!messData) return;
+  // const handleCreateMessPlan = async (
+  //   payload: CreateMessPlanPayload
+  // ) => {
+  //   try {
+  //     const token = await getToken();
+
+  //     if (!token) {
+  //       throw new Error('Authentication token unavailable');
+  //     }
+
+  //     await createMessPlan(token, payload);
+  //     const plansResponse = await getMessPlans(token);
+  //     setPlans(plansResponse.data);
+
+  //     // Show your existing success toast here.
+  //     setCurrentScreen('SETUP_HUB');
+  //   } catch (error) {
+  //     console.error('Create mess plan error:', error);
+
+  //     // Show your existing error toast here.
+  //   }
+  // };
+  const handleCreateMessPlan = async (
+    payload: CreateMessPlanPayload
+  ) => {
+    const validation = validateMessPlan(payload);
+
+    if (!validation.isValid) {
+      // Use your existing error toast mechanism.
+      // You can also pass validation.errors to the form.
+      const firstError = Object.values(validation.errors)[0];
+
+      showToast(firstError || 'Please check the form', 'error');
+      return;
+    }
 
     try {
       const token = await getToken();
 
       if (!token) {
-        throw new Error('Authentication token not available');
+        throw new Error('Authentication token unavailable');
       }
 
-      const response = await updateMonthlyPrice(token, price);
+      await createMessPlan(token, payload);
 
-      if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to update monthly price'
-        );
-      }
-
-      setMessData((prev) =>
-        prev
-          ? {
-            ...prev,
-            monthlyPrice: price,
-          }
-          : prev
-      );
+      const plansResponse = await getMessPlans(token);
+      setPlans(plansResponse.data);
 
       setCurrentScreen('SETUP_HUB');
+      if (planReturnTo === 'listing') {
+        setCurrentScreen('OPERATIONAL_HOME');
+        setInitialTab('listing');
+      }
     } catch (error) {
-      console.error('Failed to save monthly price:', error);
+      console.error('Create mess plan error:', error);
+      // Existing error toast
+      showToast('Failed to create mess plan', 'error');
     }
   };
 
@@ -377,22 +409,75 @@ export default function MessOwnerHomePage() {
       {currentScreen === 'SETUP_HUB' && (
         <SetupHub
           messData={messData}
-          onOpenMonthlyPrice={() =>
-            setCurrentScreen('MONTHLY_PRICE')
-          }
+          hasPlans={hasPlans}
           onOpenProfile={() =>
             setCurrentScreen('MESS_PROFILE')
           }
           onOpenPreview={() =>
             setCurrentScreen('STUDENT_PREVIEW')
           }
+          onOpenMessPlans={() =>
+            setCurrentScreen(
+              hasPlans
+                ? 'MESS_PLAN_OVERVIEW'
+                : 'CREATE_MESS_PLAN'
+            )
+          }
+          initialTab={initialTab}
         />
       )}
-
+      {/* 
       {currentScreen === 'MONTHLY_PRICE' && (
         <MonthlyPriceScreen
           initialPrice={messData.monthlyPrice}
           onSave={handleSaveMonthlyPrice}
+          onBack={() =>
+            setCurrentScreen('SETUP_HUB')
+          }
+        />
+      )} */}
+      {currentScreen === 'MESS_PLANS' && (
+        <MessPlans
+          plans={plans}
+          onAddPlan={() => {
+            setPlanReturnTo('listing');
+            setCurrentScreen('CREATE_MESS_PLAN');
+          }}
+          onBack={() => {
+            setCurrentScreen('SETUP_HUB');
+
+            if (planReturnTo === 'listing') {
+              setInitialTab('listing');
+            }
+          }}
+        />
+      )}
+
+      {/* {currentScreen === 'CREATE_MESS_PLAN' && (
+        <MessPlanScreen
+          onSave={handleCreateMessPlan}
+          onBack={() => setCurrentScreen('SETUP_HUB')}
+        />
+      )} */}
+      {currentScreen === 'CREATE_MESS_PLAN' && (
+        <MessPlanScreen
+          onSave={handleCreateMessPlan}
+          onBack={() => {
+            if (planReturnTo === 'listing') {
+              setCurrentScreen('OPERATIONAL_HOME');
+              setInitialTab('listing');
+            } else {
+              setCurrentScreen('SETUP_HUB');
+            }
+          }}
+        />
+      )}
+      {currentScreen === 'MESS_PLAN_OVERVIEW' && (
+        <MessPlansOverview
+          plans={plans}
+          onAddPlan={() =>
+            setCurrentScreen('CREATE_MESS_PLAN')
+          }
           onBack={() =>
             setCurrentScreen('SETUP_HUB')
           }
@@ -426,6 +511,7 @@ export default function MessOwnerHomePage() {
       {currentScreen === 'OPERATIONAL_HOME' && (
         <OperationalHome
           messData={messData}
+          initialTab={initialTab}
           onEditProfile={() =>
             setCurrentScreen('MESS_PROFILE')
           }

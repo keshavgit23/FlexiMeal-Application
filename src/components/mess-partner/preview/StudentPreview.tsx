@@ -71,7 +71,7 @@ export const StudentPreview: React.FC<StudentPreviewProps> = ({
           <div className="flex items-center gap-2">
             <i className="fa-solid fa-eye text-emerald-300 text-xs" />
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-100 font-heading">
-              Student View Preview
+              User View Preview
             </span>
           </div>
         </div>
@@ -86,7 +86,7 @@ export const StudentPreview: React.FC<StudentPreviewProps> = ({
         <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3 text-xs text-emerald-900 flex items-start gap-2.5">
           <i className="fa-solid fa-circle-check text-emerald-700 text-sm mt-0.5 shrink-0" />
           <span>
-            This is an accurate preview of what students will see in their
+            This is an accurate preview of what users will see in their
             FlexiMeal feed. Confirm everything looks right.
           </span>
         </div>

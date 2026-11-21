@@ -30,6 +30,39 @@ import {
   type PaygBooking as MyPaygBooking,
 } from '../apis/user/getMyPaygBookings.api';
 import { getMyProfile } from '../apis/user/getMyProfile.api';
+type SubmitPaymentData =
+  | {
+    profileId: number;
+    planId: number;
+    defaultResponse: 'YES' | 'NO';
+    utr: string;
+    proofUrl?: string | null;
+  }
+  | {
+    profileId: number;
+    amount: number;
+    mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER';
+    defaultResponse: 'YES' | 'NO';
+    utr: string;
+    proofUrl?: string | null;
+  };
+
+type PendingPaymentDetails = {
+  profileId: number;
+  messName: string;
+  amount: number;
+  upiId: string | null;
+  defaultResponse: 'YES' | 'NO';
+
+  // Plan-based payment
+  planId?: number;
+  planName?: string;
+  mealTypes?: MealType[];
+
+  // Legacy meal-based payment
+  mealType?: MealType;
+};
+
 interface AppContextType {
   // Navigation
   activeTab: 'home' | 'discover' | 'meals' | 'more';
@@ -52,22 +85,16 @@ interface AppContextType {
   setShowSubscriptionHook: (show: boolean) => void;
   showPaygBookingHook: boolean;
   setShowPaygBookingHook: (show: boolean) => void;
-  pendingPaymentDetails: {
-    profileId: number;
-    messName: string;
-    amount: number;
-    mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER';
-    defaultResponse: 'YES' | 'NO';
-  } | null;
-
+  pendingPaymentDetails: PendingPaymentDetails | null;
   setPendingPaymentDetails: (
-    details: {
-      profileId: number;
-      messName: string;
-      amount: number;
-      mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER';
-      defaultResponse: 'YES' | 'NO';
-    } | null
+    details: PendingPaymentDetails | null
+  ) => void;
+
+
+  createSubscription: (
+    messId: string,
+    planId: number,
+    defaultPref: SubscriptionPreference
   ) => void;
 
   // Data
@@ -101,15 +128,9 @@ interface AppContextType {
   // Actions
   updateMealStatus: (mealId: string, status: MealStatus) => void;
   toggleSubscriptionPreference: (subId: number, newPref: SubscriptionPreference) => void;
-  createSubscription: (messId: string, mealType: MealType, defaultPref: SubscriptionPreference) => void;
   // cancelSubscription: (subId: string) => void;
   submitPayment: (
-    profileId: number,
-    amount: number,
-    mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER',
-    defaultResponse: 'YES' | 'NO',
-    utr: string,
-    proofUrl?: string | null
+    data: SubmitPaymentData
   ) => Promise<any>;
   // verifyPendingPayment: (paymentId: number) => void;
   bookPaygMeal: (meal: PaygMeal) => Promise<PaygBooking>;
@@ -150,13 +171,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [showSubscriptionHook, setShowSubscriptionHook] = useState(false);
   const [showPaygBookingHook, setShowPaygBookingHook] = useState(false);
-  const [pendingPaymentDetails, setPendingPaymentDetails] = useState<{
-    profileId: number;
-    messName: string;
-    amount: number;
-    mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER';
-    defaultResponse: 'YES' | 'NO';
-  } | null>(null);
+  const [pendingPaymentDetails, setPendingPaymentDetails] =
+    useState<PendingPaymentDetails | null>(null);
 
 
   // Scenario
@@ -267,7 +283,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [payments, setPayments] = useState<Payment[]>([]);
 
   // Notifications
-const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   // Scenario Presets Switcher
   const setScenario = (scenario: ScenarioKey) => {
     setActiveScenario(scenario);
@@ -473,7 +489,7 @@ const [notifications, setNotifications] = useState<AppNotification[]>([]);
   //   });
   const createSubscription = (
     messId: string,
-    mealType: MealType,
+    planId: number,
     defaultPref: SubscriptionPreference
   ) => {
     const mess = publishedMesses.find(
@@ -485,22 +501,28 @@ const [notifications, setNotifications] = useState<AppNotification[]>([]);
       return;
     }
 
-    const monthlyPrice = Number(mess.monthly_price);
+    const selectedPlan = mess.plans?.find(
+      (plan) => plan.plan_id === planId
+    );
+
+    if (!selectedPlan) {
+      console.error('Subscription plan not found:', planId);
+      return;
+    }
 
     setPendingPaymentDetails({
       profileId: mess.profile_id,
       messName: mess.mess_name,
-      amount: monthlyPrice,
-      mealType: mealType.toUpperCase() as
-        | 'BREAKFAST'
-        | 'LUNCH'
-        | 'DINNER',
+      amount: Number(selectedPlan.price),
+      planId: selectedPlan.plan_id,
+      planName: selectedPlan.plan_name,
+      mealTypes: selectedPlan.meal_types,
       defaultResponse: defaultPref.toUpperCase() as 'YES' | 'NO',
+      upiId: mess.upi_id,
     });
 
     setIsPaymentModalOpen(true);
   };
-
   //   // Add scheduled meal for today if it matches
   //   const newMeal: ScheduledMeal = {
   //     id: `meal-${Date.now()}`,
@@ -686,35 +708,23 @@ const [notifications, setNotifications] = useState<AppNotification[]>([]);
       activeSubscriptions.length,
     ]
   );
-  const submitPayment = async (
-    profileId: number,
-    amount: number,
-    mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER',
-    defaultResponse: 'YES' | 'NO',
-    utr: string,
-    proofUrl?: string | null
-  ) => {
+
+  const submitPayment = async (data: SubmitPaymentData) => {
     const token = await getToken();
+
     if (!token) {
       throw new Error('Authentication required');
     }
 
     try {
-      const result = await createPayment(token, {
-        profileId,
-        amount,
-        mealType,
-        defaultResponse,
-        utr,
-        proofUrl: proofUrl || null,
-      });
-
+      const result = await createPayment(token, data);
       return result;
     } catch (error) {
       console.error('Payment submission failed:', error);
       throw error;
     }
   };
+
 
   // const verifyPendingPayment = (paymentId: number) => {
   //   setPayments((prev) =>
