@@ -232,7 +232,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onViewSubscriptions }) =
         <div>
           <div className="flex items-center justify-between mb-2.5">
             <h2 className="font-heading font-bold text-sm text-[#111827]">
-              Nearby Messes
+              Browse Messes
             </h2>
             <button
               onClick={() => setActiveTab('discover')}
@@ -423,14 +423,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onViewSubscriptions }) =
               <div>
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="font-heading font-bold text-sm text-[#111827] capitalize">
-                    {sub.meal_type} Plan
+                    {sub.plan_name || `${sub.meal_type || 'Custom'} Plan`}
                   </span>
                   <span className="text-[10px] font-semibold text-[#16A34A] bg-[#ECFDF5] px-1.5 py-0.2 rounded border border-[#D1FAE5]">
                     Active
                   </span>
                 </div>
                 <div className="text-xs text-[#4B5563] mb-1">
-                  {sub.mess_name} · ₹{sub.monthly_price.toLocaleString()}/mo
+                  {sub.mess_name} · ₹{Number(sub.monthly_price ?? 0).toLocaleString('en-IN')}/mo
                 </div>
                 {/* <div className="text-[11px] text-[#6B7280] flex items-center gap-2">
                   <span>Default: <strong className="text-[#111827]">{sub.default_response}</strong></span>

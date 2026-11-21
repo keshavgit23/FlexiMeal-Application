@@ -1,6 +1,6 @@
 import React from 'react';
 import type { MessOwnerData } from '../../../types/messOnboarding';
-import {getMediaUrl} from '../../../utils/media';
+import { getMediaUrl } from '../../../utils/media';
 export interface StudentPreviewCardProps {
     messData: MessOwnerData;
 }
@@ -8,9 +8,9 @@ export interface StudentPreviewCardProps {
 export const StudentPreviewCard: React.FC<StudentPreviewCardProps> = ({
     messData,
 }) => {
-   const primaryPhoto = getMediaUrl(messData.photoUrl);
-   console.log('PHOTO PATH:', messData.photoUrl);
-console.log('RESOLVED PHOTO URL:', primaryPhoto);
+    const primaryPhoto = getMediaUrl(messData.photoUrl);
+    console.log('PHOTO PATH:', messData.photoUrl);
+    console.log('RESOLVED PHOTO URL:', primaryPhoto);
     return (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm transition">
             {/* Cover / Photo Area */}
@@ -40,27 +40,20 @@ console.log('RESOLVED PHOTO URL:', primaryPhoto);
                             <span className="w-4 h-4 border-2 border-emerald-700 p-0.5 rounded-sm flex items-center justify-center shrink-0">
                                 <span className="w-1.5 h-1.5 bg-emerald-700 rounded-full" />
                             </span>
-                            <span>PURE VEG</span>
+                            <span>Pure Veg</span>
                         </span>
                     ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-sm border border-amber-200 text-amber-900 text-xs font-bold shadow-sm">
                             <span className="w-4 h-4 border-2 border-amber-800 p-0.5 rounded-sm flex items-center justify-center shrink-0">
                                 <span className="w-1.5 h-1.5 bg-amber-800 rounded-full" />
                             </span>
-                            <span>VEG / NON-VEG</span>
+                            <span>Veg & Non-Veg</span>
                         </span>
                     )}
                 </div>
 
-                {/* Verified Mess Pill */}
-                <div className="absolute top-3 right-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[10px] font-bold shadow">
-                        <i className="fa-solid fa-check text-[9px]" />
-                        <span>FlexiMeal Verified</span>
-                    </span>
-                </div>
 
-                {/* Price Tag Overlay Bottom */}
+                {/* Price Tag Overlay Bottom
                 <div className="absolute bottom-3 right-3">
                     <div className="px-3 py-1.5 rounded-xl bg-gray-950/85 backdrop-blur-md text-white shadow-lg border border-white/10 flex items-baseline gap-1">
                         <span className="text-lg font-black font-heading text-emerald-300">
@@ -68,7 +61,7 @@ console.log('RESOLVED PHOTO URL:', primaryPhoto);
                         </span>
                         <span className="text-[11px] text-gray-300 font-medium">/ month</span>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Listing Content Details */}
@@ -127,16 +120,17 @@ console.log('RESOLVED PHOTO URL:', primaryPhoto);
                         ))}
                     </div>
                 </div>
-                {/* Home-style food attributes */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                        <i className="fa-solid fa-bowl-food text-emerald-700 text-xs" />
-                        <span>Unlimited Chapatis</span>
+                {/* Static Explore Plans Preview */}
+                <div className="pt-1">
+                    <div className="w-full flex items-center justify-center gap-2
+                     bg-emerald-700 text-white font-bold text-sm
+                      py-3 rounded-xl shadow-sm">
+                        <span>Explore Plans</span>
+                        <i className="fa-solid fa-arrow-right text-xs" />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <i className="fa-solid fa-shield-halved text-emerald-700 text-xs" />
-                        <span>Clean &amp; Sanitized</span>
-                    </div>
+                    <p className="text-[10px] text-gray-400 text-center mt-2">
+                        Multiple subscription plans available
+                    </p>
                 </div>
             </div>
         </div>

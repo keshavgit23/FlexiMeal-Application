@@ -23,7 +23,11 @@ export const formatFullDate = (value: string): string => {
 };
 
 /** Format a time string such as "12:30:00" as 12:30 PM. */
-export const formatMealTime = (value: string): string => {
+export const formatMealTime = (
+  value: string | null | undefined,
+): string => {
+  if (!value) return '';
+
   const [hours, minutes] = value.split(':').map(Number);
 
   if (

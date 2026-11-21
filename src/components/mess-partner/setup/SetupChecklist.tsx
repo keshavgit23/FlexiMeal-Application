@@ -5,23 +5,24 @@ import type { MessOwnerData } from '../../../types/messOnboarding';
 
 export interface SetupChecklistProps {
     messData: MessOwnerData;
-    onOpenMonthlyPrice: () => void;
+    onOpenMessPlans: () => void;
     onOpenProfile: () => void;
     onOpenPhotos?: () => void;
+    hasPlans?: boolean;
 }
 
 export const SetupChecklist: React.FC<SetupChecklistProps> = ({
     messData,
-    onOpenMonthlyPrice,
+    onOpenMessPlans,
     onOpenProfile,
     onOpenPhotos,
+    hasPlans
 }) => {
     //   const isPriceSet = messData.monthlyPrice !== null && messData.monthlyPrice > 0;
     //   const isProfileSet =
     //     messData.description.trim().length > 0 &&
     //     messData.mealAvailability.length > 0;
-    const isPriceSet =
-        messData.monthlyPrice !== null && messData.monthlyPrice > 0;
+    const isPlanConfigured = (hasPlans ?? false);
 
     const hasMealOffering =
         messData.offersBreakfast ||
@@ -51,19 +52,17 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
                     {/* Row 1: Monthly Price */}
                     <SetupChecklistItem
                         icon="fa-solid fa-indian-rupee-sign"
-                        title="Monthly Price"
+                        title="Meal Plans & Pricing"
                         subtitle={
-                            isPriceSet
-                                ? `Active base rate: ₹${messData.monthlyPrice?.toLocaleString('en-IN')}/mo`
-                                : 'Set your standard monthly mess price'
+                            isPlanConfigured
+                                ? 'Custom monthly plans configured'
+                                : 'Create your first monthly mess plan'
                         }
-                        status={isPriceSet ? 'COMPLETED' : 'PENDING'}
+                        status={isPlanConfigured ? 'COMPLETED' : 'PENDING'}
                         valuePreview={
-                            isPriceSet
-                                ? `₹${messData.monthlyPrice?.toLocaleString('en-IN')}`
-                                : undefined
+                            isPlanConfigured ? 'Plans added' : undefined
                         }
-                        onClick={onOpenMonthlyPrice}
+                        onClick={onOpenMessPlans}
                     />
 
                     {/* Row 2: Mess Profile & Meals */}

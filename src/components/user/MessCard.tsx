@@ -164,8 +164,8 @@ export const MessCard: React.FC<MessCardProps> = ({
     mess.offers_dinner && 'Dinner',
   ].filter(Boolean) as string[];
 
-  const monthlyPrice = Number(mess.monthly_price);
 
+  
   console.log('Mess photo URL:', mess.photo_url);
 
   const primaryPhoto = getMediaUrl(mess.photo_url);
@@ -226,19 +226,6 @@ export const MessCard: React.FC<MessCardProps> = ({
           <h3 className="font-heading font-bold text-base text-[#111827] leading-tight">
             {mess.mess_name}
           </h3>
-
-          <div className="text-right shrink-0">
-            <span className="text-[11px] text-[#6B7280] block">
-              Monthly
-            </span>
-
-            <span className="font-heading font-bold text-sm text-[#111827]">
-              ₹{monthlyPrice.toLocaleString('en-IN')}
-              <span className="text-[10px] font-normal text-[#6B7280]">
-                /mo
-              </span>
-            </span>
-          </div>
         </div>
 
         {/* Description */}

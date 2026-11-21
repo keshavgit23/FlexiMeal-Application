@@ -25,7 +25,9 @@ import { getMealConfirmationsSummary, type MealConfirmationsSummary } from '../.
 import { getMessOwnerMeals, type MessOwnerMeal } from '../../../apis/mess-partner/getMessOwnerMeals.api';
 import { cancelMeal } from '../../../apis/mess-partner/cancelMeal.api';
 import PaygSettingsDrawer from './settings/PaygSettingsDrawer';
-
+import { getMessPlans, type GetMessPlansResponse } from '../../../apis/mess-partner/MessPartnerSetup.api';
+import UpiSettingsDrawer from "./settings/UpiSettingsDrawer";
+import { formatMealTime } from '../../../utils/dateTime';
 export interface OperationalHomeProps {
     messData: MessOwnerData;
     onEditProfile: () => void;
@@ -36,6 +38,7 @@ export interface OperationalHomeProps {
     } | null;
 
     onToastClose: () => void;
+    initialTab?: OperationalTab;
 }
 
 export const OperationalHome: React.FC<OperationalHomeProps> = ({
@@ -44,6 +47,7 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
     onPreviewStudentView,
     toast,
     onToastClose,
+    initialTab
 }) => {
     // const [activeTab, setActiveTab] = useState<OperationalTab>('shift');
     // const [operationalMode, setOperationalMode] =
@@ -52,7 +56,13 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
     const { showToast } = useToast();
 
     const [activeTab, setActiveTab] =
-        useState<OperationalTab>('shift');
+        useState<OperationalTab>(initialTab ?? 'shift');
+
+    useEffect(() => {
+        if (initialTab) {
+            setActiveTab(initialTab);
+        }
+    }, [initialTab]);
 
     const [currentMeal, setCurrentMeal] = useState<CurrentMeal | null>(null);
 
@@ -69,8 +79,11 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
     const [isLoadingMeals, setIsLoadingMeals] = useState(false);
     const [isLoadingConfirmations, setIsLoadingConfirmations] = useState(false);
     const [confirmationError, setConfirmationError] = useState<string | null>(null);
-
+    const [plans, setPlans] = useState<GetMessPlansResponse['data']>([]);
+    const [plansLoading, setPlansLoading] = useState(false);
+    const [plansError, setPlansError] = useState<string | null>(null);
     const [showPaygSettings, setShowPaygSettings] = useState(false);
+    const [showUpiSettings, setShowUpiSettings] = useState(false);
 
     const shiftData = currentMeal && confirmationSummary
         ? {
@@ -274,6 +287,32 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
         };
     }, [mealStatus, currentMeal?.mealId, getToken]);
 
+    const fetchPlans = async () => {
+        try {
+            setPlansLoading(true);
+            setPlansError(null);
+
+            const token = await getToken();
+            if (!token) throw new Error('Authentication required');
+
+            const response = await getMessPlans(token);
+            setPlans(response.data ?? []);
+        } catch (error) {
+            setPlansError(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to load plans'
+            );
+        } finally {
+            setPlansLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'listing') {
+            fetchPlans();
+        }
+    }, [activeTab]);
     // useEffect(() => {
 
     //     console.log('HOME LOCATION STATE:', location.state);
@@ -544,18 +583,10 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                     timing={shiftData.nextShift.timing}
                                     expectedMeals={shiftData.nextShift.expectedMeals}
                                 />
-
-                                {/* LIVE LISTING STATUS CARD */}
-                                <ListingStatus
-                                    monthlyPrice={messData.monthlyPrice}
-                                    onEditProfile={onEditProfile}
-                                    onPreviewStudentView={onPreviewStudentView}
-                                />
                             </div>
                         )}
 
                         {activeTab === "shift" && (
-                            console.log("Rendering Today's Meals section", activeTab),
                             <section className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-lg font-bold text-gray-900">
@@ -587,8 +618,8 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                                     </h3>
 
                                                     <p className="mt-1 text-sm text-gray-500">
-                                                        {meal.startTime.slice(0, 5)} –{" "}
-                                                        {meal.endTime.slice(0, 5)}
+                                                        {formatMealTime(meal.startTime)} –{" "}
+                                                        {formatMealTime(meal.endTime)}
                                                     </p>
                                                 </div>
 
@@ -788,9 +819,9 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                             </p>
 
                                             <p className="mt-1 text-sm font-bold text-gray-900">
-                                                {currentMeal.startTime.slice(0, 5)}
+                                                {formatMealTime(currentMeal.startTime)}
                                                 {' – '}
-                                                {currentMeal.endTime.slice(0, 5)}
+                                                {formatMealTime(currentMeal.endTime)}
                                             </p>
                                         </div>
                                     </div>
@@ -807,7 +838,7 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                             </p>
 
                                             <p className="text-sm font-bold text-gray-900">
-                                                {currentMeal.cutoffTime.slice(0, 5)}
+                                                {formatMealTime(currentMeal.cutoffTime)}
                                             </p>
                                         </div>
                                     </div>
@@ -1046,7 +1077,6 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                     </div>
                 )}
 
-
                 {/* TAB 3: LISTING */}
                 {activeTab === 'listing' && (
                     <div className="space-y-4 animate-in fade-in duration-200">
@@ -1055,27 +1085,14 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                 <h3 className="text-base font-black font-heading text-gray-900">
                                     Public Mess Listing
                                 </h3>
-                                <p className="text-xs text-gray-500">
-                                    Visible to college students in Pune
-                                </p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={onPreviewStudentView}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition flex items-center gap-1.5"
-                            >
-                                <i className="fa-solid fa-eye text-[11px]" />
-                                <span>Student View</span>
-                            </button>
                         </div>
 
                         <ListingStatus
-                            monthlyPrice={messData.monthlyPrice}
                             onEditProfile={onEditProfile}
                             onPreviewStudentView={onPreviewStudentView}
                         />
 
-                        {/* Quick Listing Info Card */}
                         <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
                             <div className="text-xs font-bold uppercase tracking-wider text-gray-500 font-heading">
                                 Listing Configuration
@@ -1085,12 +1102,14 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                 <span className="text-gray-500">Mess Name</span>
                                 <span className="font-bold text-gray-900">{messData.name}</span>
                             </div>
+
                             <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
                                 <span className="text-gray-500">Location</span>
                                 <span className="font-bold text-gray-900">
                                     {messData.address}, {messData.city}, {messData.state}
                                 </span>
                             </div>
+
                             <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
                                 <span className="text-gray-500">Food Type</span>
                                 <span className="font-bold text-emerald-800">
@@ -1099,12 +1118,7 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                         : 'Veg & Non-Veg'}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between text-xs py-1 border-b border-gray-100">
-                                <span className="text-gray-500">Active Monthly Rate</span>
-                                <span className="font-bold text-emerald-800">
-                                    ₹{messData.monthlyPrice?.toLocaleString('en-IN')}/month
-                                </span>
-                            </div>
+
                             <div className="flex items-center justify-between text-xs py-1">
                                 <span className="text-gray-500">Meal Availability</span>
                                 <span className="font-bold text-gray-900 capitalize">
@@ -1115,11 +1129,69 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                     ].join(', ')}
                                 </span>
                             </div>
+                            {plansLoading ? (
+                                <p className="text-sm text-gray-500 text-center py-4">
+                                    Loading subscription plans...
+                                </p>
+                            ) : plansError ? (
+                                <p className="text-sm text-red-600 text-center py-4">
+                                    {plansError}
+                                </p>
+                            ) : plans.length === 0 ? (
+                                <div className="rounded-xl border border-dashed border-gray-300 p-5 text-center">
+                                    <p className="text-sm font-bold text-gray-700">
+                                        No subscription plans yet
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Create your first plan to make it available to students.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {plans.map((plan) => (
+                                        <div
+                                            key={plan.plan_id}
+                                            className="rounded-xl border border-gray-200 p-3 space-y-2"
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-gray-900">
+                                                        {plan.plan_name}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {plan.target_gender === 'ALL'
+                                                            ? 'All students'
+                                                            : `${plan.target_gender === 'MALE' ? 'Male' : 'Female'} students`}
+                                                    </p>
+                                                </div>
+
+                                                <span
+                                                    className={`text-[10px] font-bold px-2 py-1 rounded-full ${plan.is_active
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-gray-100 text-gray-500'} `}
+                                                >
+                                                    {plan.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-black text-emerald-700">
+                                                    ₹{Number(plan.price).toLocaleString('en-IN')}
+                                                    <span className="text-xs font-medium text-gray-500">/month</span>
+                                                </span>
+
+                                                <span className="text-xs text-gray-600">
+                                                    {plan.meal_types.join(' + ')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
 
-                {/* TAB 4: SETTINGS */}
                 {activeTab === 'settings' && (
                     <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-4 animate-in fade-in duration-200">
                         <div>
@@ -1216,7 +1288,6 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="flex items-center gap-2">
                                     {pendingCount > 0 && (
                                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
@@ -1226,6 +1297,28 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
 
                                     <i className="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
                                 </div>
+                            </div>
+
+                            <div
+                                className="p-3 rounded-xl border border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
+                                onClick={() => setShowUpiSettings(true)}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                                        <i className="fa-solid fa-building-columns text-emerald-700"></i>
+                                    </div>
+
+                                    <div>
+                                        <div className="font-bold text-gray-900">
+                                            UPI Payment Details
+                                        </div>
+                                        <div className="text-gray-500 text-[11px]">
+                                            Manage the UPI ID students use to pay
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <i className="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
                             </div>
 
                             <div className="pt-2 border-t border-gray-200">
@@ -1254,9 +1347,13 @@ export const OperationalHome: React.FC<OperationalHomeProps> = ({
                     showToast={showToast}
                 />
             )}
+            {showUpiSettings && (
+                <UpiSettingsDrawer
+                    onClose={() => setShowUpiSettings(false)}
+                    showToast={showToast}
+                />
+            )}
 
-
-            {/* BOTTOM NAVIGATION (Shown ONLY in Operational Home) */}
             <OperationalBottomNav
                 activeTab={activeTab}
                 onSelectTab={setActiveTab}

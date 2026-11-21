@@ -287,6 +287,7 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ activeSection, setActive
                         amount: Number(sub.monthly_price),
                         mealType: sub.meal_type,
                         defaultResponse: sub.default_response,
+                          upiId: sub.upi_id,
                       });
                       setIsPaymentModalOpen(true);
                     }}
@@ -461,9 +462,6 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ activeSection, setActive
               <i className="fa-solid fa-arrow-left text-[11px]"></i>
               <span>Back to Menu</span>
             </button>
-            <span className="text-xs text-[#6B7280]">
-              V1 Manual UPI
-            </span>
           </div>
 
           <div className="bg-[#FFF8EE] border border-[#FFEDD5] rounded-xl p-3 text-xs text-[#9A3412]">

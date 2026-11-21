@@ -130,19 +130,27 @@ export type ScenarioKey =
   | 'K'
   | 'L';
 
+  export interface PublishedMessPlan {
+  plan_id: number;
+  plan_name: string;
+  target_gender: 'MALE' | 'FEMALE' | 'ALL';
+  price: number;
+  meal_types: MealType[];
+}
 export interface PublishedMess {
   profile_id: number;
   mess_name: string;
   mess_address: string;
   mess_city: string;
   mess_state: string;
-  monthly_price: string;
+  monthly_price: string | null;
   description: string | null;
   food_type: string;
   offers_breakfast: boolean;
   offers_lunch: boolean;
   offers_dinner: boolean;
   photo_url: string | null;
+  plans: PublishedMessPlan[];
 }
 
 export interface PaygMeal {

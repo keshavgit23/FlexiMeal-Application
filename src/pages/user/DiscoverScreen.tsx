@@ -29,6 +29,12 @@ export const DiscoverScreen: React.FC = () => {
     setEmptyDiscoverFilter(false);
   };
 
+  const mealFilters = [
+  { label: "All", value: "All" },
+  { label: "Breakfast", value: "BREAKFAST" },
+  { label: "Lunch", value: "LUNCH" },
+  { label: "Dinner", value: "DINNER" },
+] as const;
   const filteredMesses = useMemo(() => {
     if (emptyDiscoverFilter) {
       return [];
@@ -113,7 +119,7 @@ export const DiscoverScreen: React.FC = () => {
           <span className="text-[11px] font-semibold text-[#6B7280] mr-1 shrink-0">
             Diet:
           </span>
-          {(['All', 'Veg', 'NON_VEG', 'VEG_NON_VEG'] as const).map((ft) => (
+          {(['All', 'Veg', 'Non-Veg', 'Both'] as const).map((ft) => (
             <button
               key={ft}
               onClick={() => {
@@ -135,19 +141,19 @@ export const DiscoverScreen: React.FC = () => {
           <span className="text-[11px] font-semibold text-[#6B7280] mr-1 shrink-0">
             Meal:
           </span>
-          {(['All', 'BREAKFAST', 'LUNCH', 'DINNER'] as const).map((mt) => (
+          {mealFilters.map((mt) => (
             <button
-              key={mt}
+              key={mt.value}
               onClick={() => {
-                setSelectedMealType(mt);
+                setSelectedMealType(mt.value);
                 if (emptyDiscoverFilter) setEmptyDiscoverFilter(false);
               }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors shrink-0 whitespace-nowrap capitalize active:scale-95 ${selectedMealType === mt
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors shrink-0 whitespace-nowrap capitalize active:scale-95 ${selectedMealType === mt.value
                   ? 'bg-[#DC2626] text-white shadow-xs'
                   : 'bg-white text-[#4B5563] border border-[#E5E7EB] hover:bg-[#F9FAFB]'
                 }`}
             >
-              {mt}
+              {mt.label}
             </button>
           ))}
         </div>
