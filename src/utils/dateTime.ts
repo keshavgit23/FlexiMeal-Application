@@ -2,6 +2,26 @@
 const TIME_ZONE = 'Asia/Kolkata';
 const LOCALE = 'en-IN';
 
+export const getIndiaDateString = (value: Date = new Date()): string => {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(value);
+};
+
+export const getNextIndiaMidnight = (timestamp: number = Date.now()): number => {
+  const [year, month, day] = getIndiaDateString(new Date(timestamp))
+    .split('-')
+    .map(Number);
+  const nextDate = new Date(Date.UTC(year, month - 1, day + 1))
+    .toISOString()
+    .slice(0, 10);
+
+  return Date.parse(`${nextDate}T00:00:00+05:30`);
+};
+
 /** Format an ISO date/timestamp as 21 Oct 2026 in India time. */
 export const formatMealDate = (value: string): string => {
   return new Date(value).toLocaleDateString(LOCALE, {

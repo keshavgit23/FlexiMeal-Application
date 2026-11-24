@@ -1,17 +1,79 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { MealConfirmation } from '../../components/user/MealConfirmation';
 import { EmptyState } from '../../components/user/EmptyState';
+import { ErrorState } from '../../components/user/ErrorState';
+import { useToast } from '../../context/ToastContext';
+import { formatMealDate, getIndiaDateString } from '../../utils/dateTime';
 
 export const MealsScreen: React.FC = () => {
-  const { meals, activeSubscriptions, updateMealStatus, setActiveTab } = useApp();
+  const {
+    meals,
+    activeSubscriptions,
+    updateMealStatus,
+    respondToMeal,
+    refreshLiveMeals,
+    liveMealsError,
+    mealHistory,
+    mealHistoryLoading,
+    mealHistoryError,
+    mealHistoryHasMore,
+    refreshMealHistory,
+    setActiveTab,
+  } = useApp();
   const [subTab, setSubTab] = useState<'today' | 'upcoming' | 'history'>('today');
+  const [submittingMealId, setSubmittingMealId] = useState<string | null>(null);
+  const { showToast } = useToast();
 
-  const todayMeals = meals.filter((m) => m.displayDate === 'Today');
-  const upcomingMeals = meals.filter(
-    (m) => m.displayDate !== 'Today' && m.displayDate !== 'Yesterday'
+  useEffect(() => {
+    void refreshLiveMeals();
+    void refreshMealHistory(0);
+  }, [refreshLiveMeals, refreshMealHistory]);
+
+  const today = getIndiaDateString();
+  const todayMeals = meals.filter(
+    (meal) =>
+      (meal.endAt ? meal.date === today : meal.displayDate === 'Today')
   );
-  const historyMeals = meals.filter((m) => m.displayDate === 'Yesterday');
+  const upcomingMeals = meals.filter(
+    (meal) =>
+      (meal.endAt
+        ? meal.date > today
+        : meal.displayDate !== 'Today' && meal.displayDate !== 'Yesterday')
+  );
+
+  const handleMealResponse = async (
+    mealId: string,
+    confirmationId: number | undefined,
+    responseOpen: boolean | undefined,
+    mealStatus: 'UPCOMING' | 'ACTIVE' | undefined,
+    isPayg: boolean | undefined,
+    newStatus: 'explicit_yes' | 'explicit_no'
+  ) => {
+    if (!confirmationId && !mealStatus) {
+      updateMealStatus(mealId, newStatus);
+      return;
+    }
+
+    if (!confirmationId || !responseOpen || isPayg) {
+      return;
+    }
+
+    setSubmittingMealId(mealId);
+    try {
+      await respondToMeal(
+        confirmationId,
+        newStatus === 'explicit_yes' ? 'YES' : 'NO'
+      );
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : 'Failed to save your response',
+        'error'
+      );
+    } finally {
+      setSubmittingMealId(null);
+    }
+  };
 
   return (
     <div className="p-4 space-y-4 pb-24">
@@ -27,6 +89,14 @@ export const MealsScreen: React.FC = () => {
           Confirm or skip meals before the cutoff to help messes cook accurately.
         </p>
       </div>
+
+      {liveMealsError && (
+        <ErrorState
+          title="Unable to refresh meals"
+          message={liveMealsError}
+          onRetry={() => void refreshLiveMeals()}
+        />
+      )}
 
       {/* Segmented Control Sub-Tabs (Interactive button tabs) */}
       <div className="grid grid-cols-3 p-1 bg-[#F3F4F6] rounded-xl">
@@ -81,7 +151,19 @@ export const MealsScreen: React.FC = () => {
                   key={meal.id}
                   meal={meal}
                   subscription={sub}
-                  onConfirm={(newStatus) => updateMealStatus(meal.id, newStatus)}
+                  isSubmitting={submittingMealId === meal.id}
+                  onConfirm={(newStatus) => {
+                    if (newStatus === 'explicit_yes' || newStatus === 'explicit_no') {
+                      void handleMealResponse(
+                        meal.id,
+                        meal.confirmationId,
+                        meal.responseOpen,
+                        meal.mealStatus,
+                        meal.isPayg,
+                        newStatus
+                      );
+                    }
+                  }}
                 />
               );
             })
@@ -93,7 +175,7 @@ export const MealsScreen: React.FC = () => {
       {subTab === 'upcoming' && (
         <div className="space-y-3">
           {upcomingMeals.length === 0 ? (
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 text-center text-xs text-[#6B7280]">
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 text-center text-xs text-[#6B7280] flex flex-col items-center gap-3 text-center">
               <i className="fa-regular fa-calendar text-xl text-[#9CA3AF] mb-2 block"></i>
               No future meals scheduled yet.
             </div>
@@ -106,7 +188,19 @@ export const MealsScreen: React.FC = () => {
                   meal={meal}
                   subscription={sub}
                   showCompact={false}
-                  onConfirm={(newStatus) => updateMealStatus(meal.id, newStatus)}
+                  isSubmitting={submittingMealId === meal.id}
+                  onConfirm={(newStatus) => {
+                    if (newStatus === 'explicit_yes' || newStatus === 'explicit_no') {
+                      void handleMealResponse(
+                        meal.id,
+                        meal.confirmationId,
+                        meal.responseOpen,
+                        meal.mealStatus,
+                        meal.isPayg,
+                        newStatus
+                      );
+                    }
+                  }}
                 />
               );
             })
@@ -121,34 +215,109 @@ export const MealsScreen: React.FC = () => {
             Recent meal attendance & confirmations
           </div>
 
-          {/* Preset past logs */}
+          {mealHistoryError && (
+            <ErrorState
+              title="Unable to load meal history"
+              message={mealHistoryError}
+              onRetry={() => void refreshMealHistory(0)}
+            />
+          )}
+
           <div className="space-y-2">
-            {historyMeals.map((meal) => (
+            {mealHistory.map((meal) => {
+              const responseLabel =
+                meal.confirmation_status === 'YES'
+                  ? 'Confirmed Yes'
+                  : meal.confirmation_status === 'NO'
+                    ? 'Confirmed No'
+                    : 'No response recorded';
+              const bookingLabel =
+                meal.booking_status?.replace('_', ' ') || 'Booked';
+              const priceLabel =
+                meal.payg_price == null
+                  ? null
+                  : `₹${Number(meal.payg_price).toLocaleString('en-IN')}`;
+
+              return (
               <div
-                key={meal.id}
+                key={meal.meal_id}
                 className="bg-white rounded-xl border border-[#E5E7EB] p-3 shadow-xs flex items-center justify-between"
               >
                 <div>
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="font-heading font-bold text-xs text-[#111827]">
-                      {meal.displayDate} · {meal.mealType.toUpperCase()}
+                      {formatMealDate(meal.meal_date)} · {meal.meal_type}
                     </span>
-                    <span className="text-[10px] text-[#6B7280]">({meal.date})</span>
+                    {meal.is_payg && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#FFF7ED] text-[#FF6B00] border border-[#FFEDD5]">
+                        PAYG
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-[#4B5563]">
-                    {meal.messName}
+                    {meal.mess_name}
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-semibold text-[#16A34A] flex items-center gap-1 justify-end">
-                    <i className="fa-solid fa-circle-check text-[11px]"></i> Ate (YES)
-                  </span>
-                  <span className="text-[10px] text-[#6B7280]">Confirmed</span>
+                  {meal.is_payg ? (
+                    <>
+                      <span className="text-xs font-semibold text-[#16A34A]">
+                        {bookingLabel}
+                      </span>
+                      {priceLabel && (
+                        <span className="block text-[10px] text-[#6B7280]">
+                          {priceLabel}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span className={`text-xs font-semibold ${
+                        meal.confirmation_status === 'YES'
+                          ? 'text-[#16A34A]'
+                          : meal.confirmation_status === 'NO'
+                            ? 'text-[#DC2626]'
+                            : 'text-[#6B7280]'
+                      }`}>
+                        {responseLabel}
+                      </span>
+                      {meal.default_response && (
+                        <span className="block text-[10px] text-[#6B7280]">
+                          Subscription preference: Default {meal.default_response}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+
+          {mealHistoryLoading && (
+            <div className="text-center text-xs text-[#6B7280] py-2">
+              Loading meal history…
+            </div>
+          )}
+
+          {!mealHistoryLoading && mealHistory.length === 0 && !mealHistoryError && (
+            <EmptyState
+              icon="fa-solid fa-clock-rotate-left"
+              title="No meal history yet"
+              description="Meals will appear here after they have ended."
+            />
+          )}
+
+          {mealHistoryHasMore && !mealHistoryLoading && (
+            <button
+              type="button"
+              onClick={() => void refreshMealHistory(mealHistory.length)}
+              className="w-full min-h-[40px] text-xs font-semibold text-[#DC2626] hover:underline"
+            >
+              Load older meals
+            </button>
+          )}
         </div>
       )}
     </div>
