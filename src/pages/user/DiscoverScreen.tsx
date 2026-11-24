@@ -42,6 +42,12 @@ export const DiscoverScreen: React.FC = () => {
     setEmptyDiscoverFilter(false);
   };
 
+  const mealFilters = [
+  { label: "All", value: "All" },
+  { label: "Breakfast", value: "BREAKFAST" },
+  { label: "Lunch", value: "LUNCH" },
+  { label: "Dinner", value: "DINNER" },
+] as const;
   const filteredMesses = useMemo(() => {
     if (emptyDiscoverFilter) return [];
 
