@@ -70,8 +70,15 @@ export interface ScheduledMeal {
   menu: string[];
   cutoffTime: string;
   status: MealStatus;
+  mealStatus?: 'UPCOMING' | 'ACTIVE';
+  startAt?: string;
+  endAt?: string;
+  responseClosesAt?: string;
+  confirmationStatus?: 'YES' | 'NO' | 'PENDING' | null;
+  defaultResponse?: SubscriptionPreference | null;
   isPayg?: boolean;
-  paygPrice?: number;
+  paygPrice?: string | number | null;
+  bookingStatus?: 'BOOKED' | null;
   confirmationId?: number;
   responseOpen?: boolean;
 }
@@ -84,10 +91,20 @@ export interface LiveMealResponse {
   messName: string;
   menu: string[];
   cutoffTime: string;
-  mealStatus: "ACTIVE";
-  confirmationId: number;
-  response: "YES" | "NO" | null;
+  mealStatus: "UPCOMING" | "ACTIVE";
+  confirmationId: number | null;
+  response: "YES" | "NO" | "PENDING" | null;
   responseOpen: boolean;
+  status: "UPCOMING" | "ACTIVE";
+  start_at: string;
+  end_at: string;
+  response_closes_at: string;
+  responseClosesAt: string;
+  confirmationStatus: "YES" | "NO" | "PENDING" | null;
+  defaultResponse: SubscriptionPreference | null;
+  isPayg: boolean;
+  bookingStatus: "BOOKED" | null;
+  paygPrice: string | number | null;
 }
 
 export interface GetMyLiveMealsResponse {

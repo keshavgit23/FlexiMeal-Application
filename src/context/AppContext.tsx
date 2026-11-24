@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useRef } from 'react';
 import { useCallback } from "react";
 import { useAuth } from '@clerk/react';
 import type { ReactNode } from 'react';
@@ -21,6 +21,7 @@ import { createPayment } from '../apis/user/createPayment.api';
 import { getMyPayments } from '../apis/user/getUserPayments.api';
 import type { Payment } from '../types/payment';
 import { getMyLiveMeals } from '../apis/user/getMyLiveMeals.api';
+import { getMealHistory, type MealHistoryRecord } from '../apis/user/getMealHistory.api';
 import { respondToMealConfirmation, type MealConfirmationResponse, type RespondToMealConfirmationResponse } from "../apis/user/mealConfirmationResponse.api";
 import { getPaygMeals } from '../apis/user/getPaygMeals.api';
 import { createPaygBooking } from '../apis/user/createPaygBooking.api';
@@ -30,6 +31,7 @@ import {
   type PaygBooking as MyPaygBooking,
 } from '../apis/user/getMyPaygBookings.api';
 import { getMyProfile } from '../apis/user/getMyProfile.api';
+import { getIndiaDateString, getNextIndiaMidnight } from '../utils/dateTime';
 type SubmitPaymentData =
   | {
     profileId: number;
@@ -106,6 +108,11 @@ interface AppContextType {
     user_role: 'user' | 'mess_owner' | null;
   };
   meals: ScheduledMeal[];
+  mealHistory: MealHistoryRecord[];
+  mealHistoryLoading: boolean;
+  mealHistoryError: string | null;
+  mealHistoryHasMore: boolean;
+  liveMealsError: string | null;
   payments: Payment[];
   notifications: AppNotification[];
   unreadNotificationCount: number;
@@ -124,6 +131,8 @@ interface AppContextType {
   retryError: () => void;
   emptyDiscoverFilter: boolean;
   setEmptyDiscoverFilter: (empty: boolean) => void;
+  isPublishedMessesLoading: boolean;
+  publishedMessesError: string | null;
 
   // Actions
   updateMealStatus: (mealId: string, status: MealStatus) => void;
@@ -138,7 +147,8 @@ interface AppContextType {
   markAllNotificationsAsRead: () => void;
 
   refreshActiveSubscriptions: () => Promise<ActiveSubscription[]>;
-  refreshLiveMeals: (hasSubscriptions: boolean) => Promise<void>;
+  refreshLiveMeals: () => Promise<void>;
+  refreshMealHistory: (offset?: number) => Promise<void>;
   refreshPublishedMesses: () => Promise<void>;
   refreshPayments: () => Promise<void>;
 
@@ -182,6 +192,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [activeSubscriptions, setActiveSubscriptions] = useState<ActiveSubscription[]>([]);
   const [publishedMesses, setPublishedMesses] = useState<PublishedMess[]>([]);
+  const [isPublishedMessesLoading, setIsPublishedMessesLoading] = useState(false);
+  const [publishedMessesError, setPublishedMessesError] = useState<string | null>(null);
   const [paygMeals, setPaygMeals] = useState<PaygMeal[]>([]);
   const [isPaygMealsLoading, setIsPaygMealsLoading] = useState(false);
   const [paygMealsError, setPaygMealsError] = useState<string | null>(null);
@@ -278,6 +290,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Scheduled meals
   const [meals, setMeals] = useState<ScheduledMeal[]>([]);
+  const [mealHistory, setMealHistory] = useState<MealHistoryRecord[]>([]);
+  const [mealHistoryLoading, setMealHistoryLoading] = useState(false);
+  const [mealHistoryError, setMealHistoryError] = useState<string | null>(null);
+  const [mealHistoryHasMore, setMealHistoryHasMore] = useState(false);
+  const [liveMealsError, setLiveMealsError] = useState<string | null>(null);
+  const mealTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastForegroundRefreshRef = useRef(0);
 
   // Payments
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -594,72 +613,255 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [getToken]);
 
-  const refreshLiveMeals = useCallback(
-    async (hasSubscriptions: boolean) => {
-      if (!hasSubscriptions) {
-        setMeals([]);
-        return;
+  const refreshLiveMeals = useCallback(async () => {
+    if (!isLoaded || !isSignedIn) {
+      setMeals([]);
+      setLiveMealsError(null);
+      return;
+    }
+
+    try {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error('Authentication token not available');
       }
 
-      try {
-        const token = await getToken();
+      const result = await getMyLiveMeals(token);
+      const now = Date.now();
+      const today = getIndiaDateString(new Date(now));
+      const mappedMeals: ScheduledMeal[] = result.data.flatMap((meal) => {
+        const startTimestamp = Date.parse(meal.start_at);
+        const endTimestamp = Date.parse(meal.end_at);
+        const responseClosesTimestamp = Date.parse(meal.response_closes_at);
 
-        if (!token) return;
+        if (
+          !Number.isFinite(startTimestamp) ||
+          !Number.isFinite(endTimestamp) ||
+          !Number.isFinite(responseClosesTimestamp)
+        ) {
+          throw new Error(`Meal ${meal.id} has an invalid lifecycle timestamp`);
+        }
 
-        const result = await getMyLiveMeals(token);
+        if (endTimestamp <= now) {
+          return [];
+        }
 
-        const today = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Asia/Kolkata",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date());
-
-        const mappedMeals: ScheduledMeal[] = result.data.map((meal) => ({
+        return [{
           id: meal.id,
           date: meal.date,
           displayDate:
             meal.date === today
-              ? "Today"
+              ? 'Today'
               : meal.date > today
                 ? meal.date
-                : "Past",
+                : 'Past',
           mealType: meal.mealType,
           messId: meal.messId,
           messName: meal.messName,
           menu: meal.menu,
           cutoffTime: meal.cutoffTime,
           status:
-            meal.response === "YES"
-              ? "explicit_yes"
-              : meal.response === "NO"
-                ? "explicit_no"
-                : "unresponded",
-          confirmationId: meal.confirmationId,
+            meal.response === 'YES'
+              ? 'explicit_yes'
+              : meal.response === 'NO'
+                ? 'explicit_no'
+                : 'unresponded',
+          mealStatus: meal.status,
+          startAt: meal.start_at,
+          endAt: meal.end_at,
+          responseClosesAt: meal.response_closes_at,
+          confirmationStatus: meal.confirmationStatus,
+          defaultResponse: meal.defaultResponse,
+          isPayg: meal.isPayg,
+          paygPrice: meal.paygPrice,
+          bookingStatus: meal.bookingStatus,
+          confirmationId: meal.confirmationId ?? undefined,
           responseOpen: meal.responseOpen,
-        }));
+        }];
+      });
 
-        setMeals(mappedMeals);
+      setMeals(mappedMeals);
+      setLiveMealsError(null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to fetch live meals';
+      setLiveMealsError(message);
+      console.error('Failed to fetch live meals:', error);
+    }
+  }, [getToken, isLoaded, isSignedIn]);
+
+  const refreshMealHistory = useCallback(
+    async (offset = 0) => {
+      if (!isLoaded || !isSignedIn) {
+        setMealHistory([]);
+        setMealHistoryHasMore(false);
+        setMealHistoryError(null);
+        return;
+      }
+
+      setMealHistoryLoading(true);
+      setMealHistoryError(null);
+
+      try {
+        const token = await getToken();
+
+        if (!token) {
+          throw new Error('Authentication token not available');
+        }
+
+        const result = await getMealHistory(token, 20, offset);
+        setMealHistory((current) =>
+          offset === 0 ? result.data : [...current, ...result.data]
+        );
+        setMealHistoryHasMore(result.pagination.hasMore);
       } catch (error) {
-        console.error("Failed to fetch live meals:", error);
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch meal history';
+        setMealHistoryError(message);
+        console.error('Failed to fetch meal history:', error);
+      } finally {
+        setMealHistoryLoading(false);
       }
     },
-    [getToken]
+    [getToken, isLoaded, isSignedIn]
   );
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      if (mealTransitionTimerRef.current !== null) {
+        clearTimeout(mealTransitionTimerRef.current);
+        mealTransitionTimerRef.current = null;
+      }
+      return;
+    }
+
+    const updateLocalMealVisibility = (now: number) => {
+      setMeals((current) =>
+        current.flatMap((meal) => {
+          const endTimestamp = meal.endAt ? Date.parse(meal.endAt) : NaN;
+          if (Number.isFinite(endTimestamp) && endTimestamp <= now) {
+            return [];
+          }
+
+          const responseClosesTimestamp = meal.responseClosesAt
+            ? Date.parse(meal.responseClosesAt)
+            : NaN;
+
+          return [{
+            ...meal,
+            responseOpen:
+              Number.isFinite(responseClosesTimestamp) &&
+              responseClosesTimestamp <= now
+                ? false
+                : meal.responseOpen,
+          }];
+        })
+      );
+    };
+
+    const scheduleNextTransition = () => {
+      if (mealTransitionTimerRef.current !== null) {
+        clearTimeout(mealTransitionTimerRef.current);
+      }
+
+      const now = Date.now();
+      const transitions: Array<{ timestamp: number; type: 'start' | 'end' | 'cutoff' | 'midnight' }> = [
+        { timestamp: getNextIndiaMidnight(now), type: 'midnight' },
+      ];
+
+      meals.forEach((meal) => {
+        for (const [timestamp, type] of [
+          [meal.startAt, 'start'],
+          [meal.endAt, 'end'],
+          [meal.responseClosesAt, 'cutoff'],
+        ] as const) {
+          const parsed = timestamp ? Date.parse(timestamp) : NaN;
+          if (Number.isFinite(parsed) && parsed > now) {
+            transitions.push({ timestamp: parsed, type });
+          }
+        }
+      });
+
+      const nextTransition = transitions.reduce((next, transition) =>
+        transition.timestamp < next.timestamp ? transition : next
+      );
+      const delay = Math.max(0, nextTransition.timestamp - now);
+      const maxTimeoutDelay = 2_147_000_000;
+
+      mealTransitionTimerRef.current = setTimeout(() => {
+        const transitionTime = Date.now();
+        if (transitionTime < nextTransition.timestamp) {
+          scheduleNextTransition();
+          return;
+        }
+
+        updateLocalMealVisibility(transitionTime);
+        void refreshLiveMeals();
+        if (nextTransition.type === 'end' || nextTransition.type === 'midnight') {
+          void refreshMealHistory(0);
+        }
+      }, Math.min(delay, maxTimeoutDelay));
+    };
+
+    const refreshOnForeground = () => {
+      if (document.visibilityState === 'hidden') {
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastForegroundRefreshRef.current < 1000) {
+        return;
+      }
+      lastForegroundRefreshRef.current = now;
+
+      updateLocalMealVisibility(now);
+      void refreshLiveMeals();
+      void refreshMealHistory(0);
+    };
+
+    scheduleNextTransition();
+    document.addEventListener('visibilitychange', refreshOnForeground);
+    window.addEventListener('pageshow', refreshOnForeground);
+
+    return () => {
+      if (mealTransitionTimerRef.current !== null) {
+        clearTimeout(mealTransitionTimerRef.current);
+        mealTransitionTimerRef.current = null;
+      }
+      document.removeEventListener('visibilitychange', refreshOnForeground);
+      window.removeEventListener('pageshow', refreshOnForeground);
+    };
+  }, [isLoaded, isSignedIn, meals, refreshLiveMeals, refreshMealHistory]);
   const refreshPublishedMesses = useCallback(async () => {
     try {
+        console.log('Discover API request started');
+      setIsPublishedMessesLoading(true);
+      setPublishedMessesError(null);
+
       const token = await getToken();
 
       if (!token) {
-        console.warn("Authentication token not available");
-        return;
+        throw new Error('Authentication token not available');
       }
 
       const result = await getPublishedMesses(token);
 
+  console.log('Discover API response:', result.data);
       setPublishedMesses(result.data ?? []);
     } catch (error) {
-      console.error("Failed to fetch published messes:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch published messes';
+
+      setPublishedMessesError(message);
+      console.error('Failed to fetch published messes:', error);
+    } finally {
+       console.log('Discover API request finished');
+      setIsPublishedMessesLoading(false);
     }
   }, [getToken]);
 
@@ -697,16 +899,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         response
       );
 
+      setMeals((current) =>
+        current.map((meal) =>
+          meal.confirmationId === confirmationId
+            ? {
+                ...meal,
+                status:
+                  result.data.response === 'YES'
+                    ? 'explicit_yes'
+                    : 'explicit_no',
+                confirmationStatus: result.data.response,
+              }
+            : meal
+        )
+      );
+
       // Refresh the live meal list to reflect the saved response.
-      await refreshLiveMeals(activeSubscriptions.length > 0);
+      await refreshLiveMeals();
 
       return result;
     },
-    [
-      getToken,
-      refreshLiveMeals,
-      activeSubscriptions.length,
-    ]
+    [getToken, refreshLiveMeals]
   );
 
   const submitPayment = async (data: SubmitPaymentData) => {
@@ -841,17 +1054,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         meal_id: meal.meal_id,
       });
 
-      // The booking succeeded. Refresh the list for the home CTA.
+      // The booking succeeded. Refresh the booking and meal lists.
       try {
-        await refreshMyPaygBookings();
+        await Promise.all([refreshMyPaygBookings(), refreshLiveMeals()]);
       } catch (error) {
-        // Do not report booking failure when only refreshing failed.
-        console.error('Failed to refresh PAYG bookings:', error);
+        console.error('Failed to refresh data after PAYG booking:', error);
       }
 
       return result.data;
     },
-    [getToken, isLoaded, isSignedIn, refreshMyPaygBookings]
+    [getToken, isLoaded, isSignedIn, refreshLiveMeals, refreshMyPaygBookings]
   );
 
   return (
@@ -881,6 +1093,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         refreshUserProfile,
         activeSubscriptions,
         meals,
+        mealHistory,
+        mealHistoryLoading,
+        mealHistoryError,
+        mealHistoryHasMore,
+        liveMealsError,
         notifications,
         unreadNotificationCount,
         activeScenario,
@@ -900,15 +1117,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         markAllNotificationsAsRead,
         bookPaygMeal,
         publishedMesses,
+        isPublishedMessesLoading,
+        publishedMessesError,
+        refreshPublishedMesses,
         showSubscriptionHook,
         setShowSubscriptionHook,
         showPaygBookingHook,
         setShowPaygBookingHook,
         refreshActiveSubscriptions,
-        refreshPublishedMesses,
         payments,
         refreshPayments,
         refreshLiveMeals,
+        refreshMealHistory,
         respondToMeal,
         paygMeals,
         fetchPaygMeals,

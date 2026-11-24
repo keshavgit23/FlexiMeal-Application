@@ -8,6 +8,7 @@ interface MealConfirmationProps {
   subscription?: ActiveSubscription;
   onConfirm: (status: MealStatus) => void;
   showCompact?: boolean;
+  isSubmitting?: boolean;
 }
 
 export const MealConfirmation: React.FC<MealConfirmationProps> = ({
@@ -15,8 +16,20 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
   subscription,
   onConfirm,
   showCompact = false,
+  isSubmitting = false,
 }) => {
-  const defaultPref = subscription?.default_response || 'YES';
+  const defaultPref =
+    meal.defaultResponse || subscription?.default_response || 'YES';
+  const canRespond =
+    !meal.isPayg &&
+    meal.responseOpen !== false &&
+    (meal.responseOpen === undefined || Boolean(meal.confirmationId));
+  const responseDisabled = !canRespond || isSubmitting;
+  const bookingStatus = meal.bookingStatus?.replace('_', ' ') || 'BOOKED';
+  const formattedPaygPrice =
+    meal.paygPrice == null
+      ? null
+      : `₹${Number(meal.paygPrice).toLocaleString('en-IN')}`;
 
   // Capitalize meal name
   const formattedMealType = meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1);
@@ -42,17 +55,23 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
         </div>
         <div className="flex items-center justify-between pt-1 border-t border-[#F3F4F6]">
           <span className="text-xs font-medium text-[#6B7280]">Status:</span>
-          {meal.status === 'unresponded' ? (
+          {meal.isPayg ? (
+            <span className="text-xs font-semibold text-[#16A34A]">
+              {bookingStatus}{formattedPaygPrice ? ` · ${formattedPaygPrice}` : ''}
+            </span>
+          ) : meal.status === 'unresponded' ? (
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => onConfirm('explicit_yes')}
-                className="px-3 py-1 text-xs font-semibold rounded-md bg-[#16A34A] text-white active:scale-95 transition-transform"
+                disabled={responseDisabled}
+                className="px-3 py-1 text-xs font-semibold rounded-md bg-[#16A34A] text-white active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 YES
               </button>
               <button
                 onClick={() => onConfirm('explicit_no')}
-                className="px-3 py-1 text-xs font-semibold rounded-md bg-[#F3F4F6] text-[#4B5563] active:scale-95 transition-transform"
+                disabled={responseDisabled}
+                className="px-3 py-1 text-xs font-semibold rounded-md bg-[#F3F4F6] text-[#4B5563] active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 NO
               </button>
@@ -115,49 +134,58 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
       <div className="pt-1 border-t border-[#F3F4F6]">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-[#111827] uppercase tracking-wide">
-            Eating today?
+            {meal.isPayg ? 'PAYG booking' : 'Eating today?'}
           </span>
 
           {/* Status Label */}
-          {meal.status === 'explicit_yes' && (
+          {meal.isPayg ? (
+            <span className="text-xs font-semibold text-[#16A34A] bg-[#ECFDF5] px-2 py-0.5 rounded border border-[#D1FAE5]">
+              {bookingStatus}{formattedPaygPrice ? ` · ${formattedPaygPrice}` : ''}
+            </span>
+          ) : meal.status === 'explicit_yes' && (
             <span className="text-xs font-semibold text-[#16A34A] bg-[#ECFDF5] px-2 py-0.5 rounded border border-[#D1FAE5] flex items-center gap-1">
               <i className="fa-solid fa-check text-[10px]"></i> Confirmed
             </span>
           )}
-          {meal.status === 'explicit_no' && (
+          {!meal.isPayg && meal.status === 'explicit_no' && (
             <span className="text-xs font-semibold text-[#DC2626] bg-[#FEF2F2] px-2 py-0.5 rounded border border-[#FEE2E2] flex items-center gap-1">
               <i className="fa-solid fa-xmark text-[10px]"></i> Confirmed
             </span>
           )}
-          {meal.status === 'default_applied_yes' && (
+          {!meal.isPayg && meal.status === 'default_applied_yes' && (
             <span className="text-xs font-semibold text-[#D97706] bg-[#FEF3C7] px-2 py-0.5 rounded border border-[#FDE68A] flex items-center gap-1">
               <i className="fa-solid fa-clock-rotate-left text-[10px]"></i> YES — Default
             </span>
           )}
-          {meal.status === 'default_applied_no' && (
+          {!meal.isPayg && meal.status === 'default_applied_no' && (
             <span className="text-xs font-semibold text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded border border-[#E5E7EB] flex items-center gap-1">
               <i className="fa-solid fa-clock-rotate-left text-[10px]"></i> NO — Default
             </span>
           )}
-          {meal.status === 'unresponded' && (
-            <span className="text-xs font-semibold text-[#FF6B00] bg-[#FFF7ED] px-2 py-0.5 rounded border border-[#FFEDD5] animate-pulse">
-              Response Needed
+          {!meal.isPayg && meal.status === 'unresponded' && (
+            <span className={`text-xs font-semibold text-[#FF6B00] bg-[#FFF7ED] px-2 py-0.5 rounded border border-[#FFEDD5] ${canRespond ? 'animate-pulse' : ''}`}>
+              {canRespond
+                ? 'Response Needed'
+                : meal.mealStatus === 'UPCOMING'
+                  ? 'Not Live Yet'
+                  : 'Response Closed'}
             </span>
           )}
         </div>
 
         {/* Large YES / NO Touch Controls (Min 48px height) */}
-        <div className="grid grid-cols-2 gap-3 mb-2.5">
+        {!meal.isPayg && <div className="grid grid-cols-2 gap-3 mb-2.5">
           {/* YES Button */}
           <button
             onClick={() => onConfirm('explicit_yes')}
+            disabled={responseDisabled}
             className={`min-h-[50px] rounded-xl flex items-center justify-center gap-2 font-bold text-sm transition-all active:scale-[0.98] ${
               meal.status === 'explicit_yes'
                 ? 'bg-[#16A34A] text-white shadow-sm ring-2 ring-[#16A34A]/20'
                 : meal.status === 'default_applied_yes'
                 ? 'bg-[#ECFDF5] text-[#16A34A] border-2 border-dashed border-[#16A34A]'
                 : 'bg-[#F9FAFB] text-[#374151] border border-[#D1D5DB] hover:bg-[#F3F4F6]'
-            }`}
+            } disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100`}
           >
             <i className="fa-solid fa-check text-base"></i>
             <span>YES, I'M EATING</span>
@@ -166,33 +194,44 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
           {/* NO Button */}
           <button
             onClick={() => onConfirm('explicit_no')}
+            disabled={responseDisabled}
             className={`min-h-[50px] rounded-xl flex items-center justify-center gap-2 font-bold text-sm transition-all active:scale-[0.98] ${
               meal.status === 'explicit_no'
                 ? 'bg-[#111827] text-white shadow-sm ring-2 ring-[#111827]/20'
                 : meal.status === 'default_applied_no'
                 ? 'bg-[#F3F4F6] text-[#4B5563] border-2 border-dashed border-[#6B7280]'
                 : 'bg-[#F9FAFB] text-[#374151] border border-[#D1D5DB] hover:bg-[#F3F4F6]'
-            }`}
+            } disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100`}
           >
             <i className="fa-solid fa-xmark text-base"></i>
             <span>NOT EATING</span>
           </button>
-        </div>
+        </div>}
 
         {/* Status Explanations (Prominent, not hidden in tooltip) */}
-        {meal.status === 'unresponded' && (
+        {!meal.isPayg && meal.status === 'unresponded' && (
           <div className="bg-[#FFF8EE] rounded-lg p-2.5 border border-[#FFEDD5] text-xs text-[#7C2D12] flex items-start gap-2">
             <i className="fa-solid fa-circle-exclamation text-[#FF6B00] mt-0.5 shrink-0"></i>
             <div>
-              <p className="font-semibold">Confirm by {meal.cutoffTime}</p>
-              <p className="text-[11px] text-[#9A3412] mt-0.5">
-                No response? Your default <strong className="underline">{defaultPref}</strong> will be applied automatically at cutoff.
-              </p>
+              {canRespond ? (
+                <>
+                  <p className="font-semibold">Confirm by {meal.cutoffTime}</p>
+                  <p className="text-[11px] text-[#9A3412] mt-0.5">
+                    No response? Your default <strong className="underline">{defaultPref}</strong> will be applied automatically at cutoff.
+                  </p>
+                </>
+              ) : (
+                <p className="font-semibold">
+                  {meal.mealStatus === 'UPCOMING'
+                    ? 'Responses open when this meal goes live.'
+                    : 'The response window is closed.'}
+                </p>
+              )}
             </div>
           </div>
         )}
 
-        {meal.status === 'explicit_yes' && (
+        {!meal.isPayg && meal.status === 'explicit_yes' && (
           <div className="bg-[#ECFDF5] rounded-lg p-2.5 border border-[#D1FAE5] text-xs text-[#065F46] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-circle-check text-[#16A34A] text-sm shrink-0"></i>
@@ -200,6 +239,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
             </div>
             <button
               onClick={() => onConfirm('explicit_no')}
+              disabled={responseDisabled}
               className="text-[11px] text-[#16A34A] font-semibold underline shrink-0 hover:text-[#047857]"
             >
               Change to NO
@@ -207,7 +247,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
           </div>
         )}
 
-        {meal.status === 'explicit_no' && (
+        {!meal.isPayg && meal.status === 'explicit_no' && (
           <div className="bg-[#F3F4F6] rounded-lg p-2.5 border border-[#E5E7EB] text-xs text-[#4B5563] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-ban text-[#6B7280] text-sm shrink-0"></i>
@@ -215,6 +255,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
             </div>
             <button
               onClick={() => onConfirm('explicit_yes')}
+              disabled={responseDisabled}
               className="text-[11px] text-[#111827] font-semibold underline shrink-0 hover:text-black"
             >
               Change to YES
@@ -222,7 +263,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
           </div>
         )}
 
-        {meal.status === 'default_applied_yes' && (
+        {!meal.isPayg && meal.status === 'default_applied_yes' && (
           <div className="bg-[#FEF3C7] rounded-lg p-2.5 border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-2">
             <i className="fa-solid fa-clock-rotate-left text-[#D97706] mt-0.5 shrink-0"></i>
             <div>
@@ -234,7 +275,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
           </div>
         )}
 
-        {meal.status === 'default_applied_no' && (
+        {!meal.isPayg && meal.status === 'default_applied_no' && (
           <div className="bg-[#F3F4F6] rounded-lg p-2.5 border border-[#E5E7EB] text-xs text-[#4B5563] flex items-start gap-2">
             <i className="fa-solid fa-clock-rotate-left text-[#6B7280] mt-0.5 shrink-0"></i>
             <div>
