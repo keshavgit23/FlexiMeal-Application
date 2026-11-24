@@ -9,10 +9,20 @@ export interface LiveMeal {
   messName: string;
   menu: string[];
   cutoffTime: string;
-  mealStatus: "ACTIVE";
-  confirmationId: number;
-  response: "YES" | "NO" | null;
+  mealStatus: "UPCOMING" | "ACTIVE";
+  confirmationId: number | null;
+  response: "YES" | "NO" | "PENDING" | null;
   responseOpen: boolean;
+  status: "UPCOMING" | "ACTIVE";
+  start_at: string;
+  end_at: string;
+  response_closes_at: string;
+  responseClosesAt: string;
+  confirmationStatus: "YES" | "NO" | "PENDING" | null;
+  defaultResponse: "YES" | "NO" | null;
+  isPayg: boolean;
+  bookingStatus: "BOOKED" | null;
+  paygPrice: string | number | null;
 }
 
 export interface GetMyLiveMealsResponse {

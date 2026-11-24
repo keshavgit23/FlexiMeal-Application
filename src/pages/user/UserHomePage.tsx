@@ -4,6 +4,7 @@ import { MealConfirmation } from '../../components/user/MealConfirmation';
 import { MessCard } from '../../components/user/MessCard';
 import { ErrorState } from '../../components/user/ErrorState';
 import { useAuth } from '@clerk/react';
+import { useToast } from '../../context/ToastContext';
 
 interface HomeScreenProps {
   onViewSubscriptions: () => void;
@@ -45,6 +46,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onViewSubscriptions }) =
 
   console.log('HOME HOOK:', showSubscriptionHook);
   const { isLoaded, isSignedIn } = useAuth();
+  const { showToast } = useToast();
   // useEffect(() => {
   //   console.log('HOME AUTH STATE:', {
   //     isLoaded,
@@ -76,9 +78,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onViewSubscriptions }) =
     if (!isLoaded || !isSignedIn) return;
 
     const loadHomeData = async () => {
-      const subscriptions = await refreshActiveSubscriptions();
+      await refreshActiveSubscriptions();
 
-      await refreshLiveMeals(subscriptions.length > 0);
+      await refreshLiveMeals();
       await refreshPublishedMesses();
     };
 
@@ -342,10 +344,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onViewSubscriptions }) =
                     const response =
                       newStatus === "explicit_yes" ? "YES" : "NO";
 
-                    if (meal.confirmationId) {
-                      await respondToMeal(meal.confirmationId, response);
-                    } else {
-                      updateMealStatus(meal.id, newStatus);
+                    try {
+                      if (meal.confirmationId) {
+                        await respondToMeal(meal.confirmationId, response);
+                      } else {
+                        updateMealStatus(meal.id, newStatus);
+                      }
+                    } catch (error) {
+                      showToast(
+                        error instanceof Error
+                          ? error.message
+                          : 'Failed to save your response',
+                        'error'
+                      );
                     }
                   }}
                 />
@@ -383,7 +394,25 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onViewSubscriptions }) =
                   meal={meal}
                   subscription={sub}
                   showCompact={true}
-                  onConfirm={(newStatus) => updateMealStatus(meal.id, newStatus)}
+                  onConfirm={async (newStatus) => {
+                    const response =
+                      newStatus === 'explicit_yes' ? 'YES' : 'NO';
+
+                    try {
+                      if (meal.confirmationId) {
+                        await respondToMeal(meal.confirmationId, response);
+                      } else {
+                        updateMealStatus(meal.id, newStatus);
+                      }
+                    } catch (error) {
+                      showToast(
+                        error instanceof Error
+                          ? error.message
+                          : 'Failed to save your response',
+                        'error'
+                      );
+                    }
+                  }}
                 />
               );
             })}
