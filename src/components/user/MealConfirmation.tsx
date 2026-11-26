@@ -235,7 +235,7 @@ export const MealConfirmation: React.FC<MealConfirmationProps> = ({
           <div className="bg-[#ECFDF5] rounded-lg p-2.5 border border-[#D1FAE5] text-xs text-[#065F46] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-circle-check text-[#16A34A] text-sm shrink-0"></i>
-              <span><strong>You're eating today.</strong> Meal token confirmed.</span>
+              <span><strong>You're eating today.</strong> Meal confirmed.</span>
             </div>
             <button
               onClick={() => onConfirm('explicit_no')}
