@@ -116,7 +116,7 @@ export function AuthPage({
         const { error } = await signUp.sso({
           strategy,
           redirectCallbackUrl: '/sso-callback',
-          redirectUrl: '/auth-resolver',
+          redirectUrl: '/',
 
         });
 
@@ -131,7 +131,7 @@ export function AuthPage({
       const { error } = await signIn.sso({
         strategy,
         redirectCallbackUrl: '/sso-callback',
-        redirectUrl: '/auth-resolver',
+        redirectUrl: '/',
 
       });
 
