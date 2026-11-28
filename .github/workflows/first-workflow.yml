@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Welcome
-        run: echo "Hello FlexiMeal DevOps!"
+        run: exit 1
 
       - name: Check Node Version
         run: node --version
