@@ -17,6 +17,7 @@ jobs:
         run: exit 1
 
       - name: Check Node Version
+        if: always()
         run: node --version
 
       - name: Check NPM Version
